@@ -36,6 +36,9 @@ Build `/events`: a month calendar (default view) using `date-fns`, marking days 
 ### 07 — Event detail & registration
 Build `/events/[id]`: full event info (public fields only), a "Register" CTA that prompts login if logged out, and a registration form if logged in. Registration writes to `event_registrations`-equivalent (add this table if not already in schema — one row per user per event, with a `form_response jsonb` for any event-specific fields). Show "Registration coming soon" state for events not yet open.
 
+### 07a — Review form & contact form
+Add two tables: `reviews` (user_id nullable, message, rating optional, created_at) and `contact_messages` (name, email, message, created_at). Wire the `#contact` section on the home page to an actual submission handler (server action or API route) that writes to `contact_messages`, validates with `zod`, and sends a notification email (stub until prompt 18 exists, then wire it properly). Build a `/review` route (or a reachable section from the dashboard) for the review form from the original notes — default to login-required unless told otherwise, since it ties feedback to a real member. Add `/admin/reviews` and `/admin/messages` as simple read-only lists so leaders can see what's been submitted.
+
 ---
 
 ## Phase 3 — Student & volunteer portals
@@ -95,12 +98,19 @@ Build the shared `buildExcelExport()` helper using `exceljs`. Wire it into: even
 Go through every table and confirm RLS policies match `AGENTS.md` exactly. Confirm no client-trusted status/role fields anywhere. Confirm rate limiting on registration, self-claim, and yellow-form endpoints. Confirm budget/requirements never appear in any student/volunteer-facing API response (check network responses, not just UI rendering).
 
 ### 22 — Admin: roles & settings
-Build `admin`-only views: role management (promote/demote between `student`/`volunteer`/`core_team`/`admin`), member directory with search, and a settings panel for toggling event visibility and editing About/Team/Highlights content without a redeploy (simplest version: a settings table read by the marketing pages instead of hardcoded `data/` content).
+Build `admin`-only views: role management (promote/demote between `student`/`volunteer`/`core_team`/`admin`), member directory with search, and a settings panel for toggling event visibility and editing About/Team/Highlights content without a redeploy (simplest version: a settings table read by the marketing pages instead of hardcoded `data/` content). Also build `/admin/audit`: a read-only view of `mail_log` (filterable by type/date/recipient) so leaders can actually check whether a given email sent, instead of the table existing with no way to look at it.
 
 ### 23 — Deployment
 Deploy to Vercel. Set all environment variables from the `.env.local.example` reference. Verify the Supabase keep-alive cron is live. Do a full walkthrough as each of the four roles (student, volunteer, core_team, admin) to confirm every route in the sitemap works end-to-end before considering this launched.
 
 ---
+
+## Coverage check
+
+Every feature from the original notes and the full feature list is represented above, including ones easy to lose track of:
+- Review form → `07a`, `/review`
+- Contact form → `07a`, `#contact` handler
+- Mail/audit log viewing → `22`, `/admin/audit`
 
 ## Notes for whoever runs these prompts
 
