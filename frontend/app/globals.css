@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CAADS Design Tokens ───────────────────────────────────── */
+:root {
+  --bg:           #0A0A0A;
+  --bg-secondary: #151515;
+  --gold:         #C9A227;
+  --gold-bright:  #E8B93E;
+  --ivory:        #F2EDE4;
+  --muted:        #B8B2A7;
+  --border-gold:  #7A5C1E;
+}
+
+/* ── Base styles ───────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--ivory);
+    font-family: var(--font-ibm-plex-sans), sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-space-grotesk), sans-serif;
+    color: var(--ivory);
+    letter-spacing: -0.02em;
+  }
+
+  /* Selection highlight */
+  ::selection {
+    background-color: rgba(201, 162, 39, 0.25);
+    color: var(--ivory);
+  }
+
+  /* Scrollbar — subtle gold-tinted dark */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-gold);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--gold);
+  }
+}
+
+/* ── Utility layer ─────────────────────────────────────────── */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Gold gradient text utility */
+  .text-gold-gradient {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glass card effect */
+  .glass {
+    background: rgba(21, 21, 21, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-gold);
+  }
+
+  /* Subtle gold border with transparency */
+  .border-gold-subtle {
+    border-color: rgba(122, 92, 30, 0.4);
+  }
+}
