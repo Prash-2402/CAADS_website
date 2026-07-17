@@ -5,6 +5,7 @@ import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import { ArrowLeft, Calendar, CheckCircle2, Clock, MapPin, XCircle, FileText } from "lucide-react";
 import type { Metadata } from "next";
+import SelfClaimButton from "./self-claim-button";
 
 export const metadata: Metadata = {
   title: "Registration Details",
@@ -116,12 +117,17 @@ export default async function RegistrationDetailsPage({ params }: { params: { id
             <h3 className="font-display font-bold text-lg text-ivory mb-4 border-b border-border-gold/30 pb-2">Attendance Status</h3>
             
             {!attendance ? (
-              <div className="flex items-center gap-3">
-                <Clock className="text-muted" size={24} />
-                <div>
-                  <p className="font-body text-ivory">Not yet recorded</p>
-                  <p className="text-sm text-muted">Attendance will be marked during the event.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Clock className="text-muted" size={24} />
+                  <div>
+                    <p className="font-body text-ivory">Not yet recorded</p>
+                    <p className="text-sm text-muted">Attendance will be marked during the event.</p>
+                  </div>
                 </div>
+                {isPastEvent && (
+                  <SelfClaimButton eventId={event.id} />
+                )}
               </div>
             ) : attendance.status === 'approved' ? (
               <div className="flex items-center gap-3">

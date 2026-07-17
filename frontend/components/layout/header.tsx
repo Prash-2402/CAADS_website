@@ -17,16 +17,12 @@ export function Header({ userRole }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Handle scroll effect
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Define nav links. If on home page, use anchor links for sections.
   const navLinks = [
     { name: "About", href: isHome ? "#about" : "/#about" },
     { name: "Highlights", href: isHome ? "#highlights" : "/#highlights" },
@@ -34,88 +30,42 @@ export function Header({ userRole }: HeaderProps) {
     { name: "Events", href: "/events" },
   ];
 
-  const renderAuthButton = () => {
-    if (!userRole) {
-      return (
-        <Link
-          href="/login"
-          className="px-4 py-2 rounded-xl bg-gold text-bg font-semibold hover:bg-gold-bright transition-colors"
-        >
-          Sign In
-        </Link>
-      );
-    }
-
-    if (userRole === "admin" || userRole === "core_team") {
-      return (
-        <Link
-          href="/admin"
-          className="px-4 py-2 rounded-xl bg-bg-secondary border border-gold text-ivory font-semibold hover:bg-gold/10 transition-colors"
-        >
-          Admin Portal
-        </Link>
-      );
-    }
-
-    if (userRole === "volunteer") {
-      return (
-        <Link
-          href="/volunteer"
-          className="px-4 py-2 rounded-xl bg-bg-secondary border border-gold text-ivory font-semibold hover:bg-gold/10 transition-colors"
-        >
-          Volunteer Portal
-        </Link>
-      );
-    }
-
-    // Default student
-    return (
-      <Link
-        href="/dashboard"
-        className="px-4 py-2 rounded-xl bg-bg-secondary border border-gold text-ivory font-semibold hover:bg-gold/10 transition-colors"
-      >
-        Dashboard
-      </Link>
-    );
-  };
-
   return (
     <header
       className={cn(
         "fixed top-0 inset-x-0 z-50 transition-all duration-300",
         isScrolled
-          ? "bg-bg/80 backdrop-blur-md border-b border-border-gold/50 shadow-sm py-3"
-          : "bg-transparent py-5"
+          ? "bg-bg/80 backdrop-blur-md border-b border-border-gold/50 shadow-sm py-4"
+          : "bg-transparent py-6"
       )}
     >
-      <div className="container mx-auto px-4 md:px-8 max-w-7xl">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="font-display text-2xl font-bold text-ivory tracking-tight group-hover:text-gold transition-colors">
-              CAADS
-            </span>
-          </Link>
+      <div className="w-full px-6 md:px-12">
+        <div className="flex items-start justify-between">
+          
+          {/* Left Side: Logo + Nav */}
+          <div className="flex flex-col gap-4">
+            {/* Logo */}
+            <Link href="/" className="group inline-block">
+              <span className="font-display text-lg md:text-xl font-bold text-ivory tracking-tight group-hover:text-gold transition-colors leading-snug">
+                Christite Association for Artificial<br />
+                Intelligence & Data Science
+              </span>
+            </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className="font-body text-sm font-medium text-muted hover:text-ivory transition-colors"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Desktop Auth */}
-          <div className="hidden md:flex items-center gap-4">
-            {renderAuthButton()}
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex items-center gap-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="font-body text-sm font-medium text-ivory hover:text-gold transition-colors"
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </nav>
           </div>
 
-          {/* Mobile Menu Toggle */}
           <button
             className="md:hidden p-2 text-ivory"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -138,7 +88,6 @@ export function Header({ userRole }: HeaderProps) {
               {link.name}
             </Link>
           ))}
-          <div className="pt-2">{renderAuthButton()}</div>
         </div>
       )}
     </header>

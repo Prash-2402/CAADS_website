@@ -25,7 +25,7 @@ export async function registerForEventAction(
   // Check if event exists and is public
   const { data: event, error: eventError } = await supabase
     .from("events_public")
-    .select("id")
+    .select("id, title")
     .eq("id", eventId)
     .single();
 
@@ -47,6 +47,17 @@ export async function registerForEventAction(
       return { error: "You are already registered for this event." };
     }
     return { error: "Failed to register. Please try again." };
+  }
+
+  // Send registration confirmation email
+  try {
+    const { getUserEmail, sendRegistrationConfirmEmail } = await import("@/lib/mail");
+    const email = await getUserEmail(profile.id);
+    if (email) {
+      await sendRegistrationConfirmEmail(email, event.title);
+    }
+  } catch (err) {
+    console.error("Failed to send confirmation email", err);
   }
 
   revalidatePath(`/events/${eventId}`);
