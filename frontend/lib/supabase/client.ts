@@ -8,7 +8,7 @@ import type { Database } from "@/types/database";
  * Safe to call on every render — createBrowserClient handles singleton internally.
  */
 export function createClient() {
-  return createBrowserClient<Database>(
+  return createBrowserClient<any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );

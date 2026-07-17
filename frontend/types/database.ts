@@ -144,27 +144,53 @@ export type MailLog = {
   sent_at: string;
 };
 
+export type Review = {
+  id: string;
+  user_id: string | null;
+  message: string;
+  rating: number | null;
+  created_at: string;
+};
+
+export type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  created_at: string;
+};
+
 // ── Supabase Database type (used by createClient generics) ────
 export type Database = {
   public: {
     Tables: {
-      profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile> };
-      events: { Row: Event; Insert: Partial<Event>; Update: Partial<Event> };
-      event_registrations: { Row: EventRegistration; Insert: Partial<EventRegistration>; Update: Partial<EventRegistration> };
-      volunteer_assignments: { Row: VolunteerAssignment; Insert: Partial<VolunteerAssignment>; Update: Partial<VolunteerAssignment> };
-      attendance: { Row: Attendance; Insert: Partial<Attendance>; Update: Partial<Attendance> };
-      yellow_forms: { Row: YellowForm; Insert: Partial<YellowForm>; Update: Partial<YellowForm> };
-      meetings: { Row: Meeting; Insert: Partial<Meeting>; Update: Partial<Meeting> };
-      meeting_attendance: { Row: MeetingAttendance; Insert: Partial<MeetingAttendance>; Update: Partial<MeetingAttendance> };
-      meeting_minutes: { Row: MeetingMinutes; Insert: Partial<MeetingMinutes>; Update: Partial<MeetingMinutes> };
-      grievances: { Row: Grievance; Insert: Partial<Grievance>; Update: Partial<Grievance> };
-      documents: { Row: Document; Insert: Partial<Document>; Update: Partial<Document> };
-      mail_log: { Row: MailLog; Insert: Partial<MailLog>; Update: Partial<MailLog> };
+      profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile>; Relationships: any[] };
+      events: { Row: Event; Insert: Partial<Event>; Update: Partial<Event>; Relationships: any[] };
+      event_registrations: { Row: EventRegistration; Insert: Partial<EventRegistration>; Update: Partial<EventRegistration>; Relationships: any[] };
+      volunteer_assignments: { Row: VolunteerAssignment; Insert: Partial<VolunteerAssignment>; Update: Partial<VolunteerAssignment>; Relationships: any[] };
+      attendance: { Row: Attendance; Insert: Partial<Attendance>; Update: Partial<Attendance>; Relationships: any[] };
+      yellow_forms: { Row: YellowForm; Insert: Partial<YellowForm>; Update: Partial<YellowForm>; Relationships: any[] };
+      meetings: { Row: Meeting; Insert: Partial<Meeting>; Update: Partial<Meeting>; Relationships: any[] };
+      meeting_attendance: { Row: MeetingAttendance; Insert: Partial<MeetingAttendance>; Update: Partial<MeetingAttendance>; Relationships: any[] };
+      meeting_minutes: { Row: MeetingMinutes; Insert: Partial<MeetingMinutes>; Update: Partial<MeetingMinutes>; Relationships: any[] };
+      grievances: { Row: Grievance; Insert: Partial<Grievance>; Update: Partial<Grievance>; Relationships: any[] };
+      documents: { Row: Document; Insert: Partial<Document>; Update: Partial<Document>; Relationships: any[] };
+      mail_log: { Row: MailLog; Insert: Partial<MailLog>; Update: Partial<MailLog>; Relationships: any[] };
+      reviews: { Row: Review; Insert: Partial<Review>; Update: Partial<Review>; Relationships: any[] };
+      contact_messages: { Row: ContactMessage; Insert: Partial<ContactMessage>; Update: Partial<ContactMessage>; Relationships: any[] };
     };
     Views: {
-      events_public: { Row: EventPublic };
+      events_public: { 
+        Row: EventPublic; 
+        Insert: Partial<EventPublic>; 
+        Update: Partial<EventPublic>;
+        Relationships: any[];
+      };
+      [_: string]: any;
     };
-    Functions: Record<string, never>;
+    Functions: {
+      [_: string]: any;
+    };
     Enums: {
       user_role: UserRole;
       volunteer_status: VolunteerStatus;
@@ -173,6 +199,10 @@ export type Database = {
       yellow_form_method: YellowFormMethod;
       yellow_form_status: YellowFormStatus;
       grievance_status: GrievanceStatus;
+      [_: string]: any;
+    };
+    CompositeTypes: {
+      [_: string]: any;
     };
   };
 };

@@ -36,8 +36,8 @@ export function CalendarView({ events }: CalendarViewProps) {
   // Generate calendar days
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart, { weekStarts: 0 }); // Sunday start
-  const endDate = endOfWeek(monthEnd, { weekStarts: 0 });
+  const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
   const dateFormat = "d";
   const rows = [];
