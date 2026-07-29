@@ -23,15 +23,22 @@ export function Team() {
               key={i}
               className="bg-bg border border-border-gold rounded-2xl overflow-hidden group hover:border-gold transition-colors duration-300"
             >
-              <div className="relative aspect-square overflow-hidden bg-bg-secondary">
-                {/* Fallback pattern if image is missing */}
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold via-bg to-bg" />
-                <Image
-                  src={member.image}
-                  alt={member.name}
-                  fill
-                  className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                />
+              <div className="relative aspect-square overflow-hidden bg-bg-secondary flex items-center justify-center border-b border-border-gold/50">
+                {member.image ? (
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-all duration-500"
+                    sizes="(max-width: 768px) 100vw, 300px"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold/20 via-bg-secondary to-bg flex items-center justify-center">
+                    <span className="font-display font-bold text-5xl text-gold">
+                      {member.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
               </div>
               
               <div className="p-6 relative">

@@ -44,14 +44,14 @@ export function About() {
 
           {/* Visual Side */}
           <div className="relative aspect-square md:aspect-[4/3] lg:aspect-square rounded-2xl overflow-hidden border border-border-gold shadow-gold group">
-            {/* Dark overlay & placeholder gradient since we don't have real images yet */}
-            <div className="absolute inset-0 bg-gradient-to-br from-bg to-bg-secondary z-10 opacity-80 group-hover:opacity-60 transition-opacity duration-500" />
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
+            {/* Tech grid & glow pattern */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold/15 via-bg-secondary to-bg z-10" />
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#7A5C1E15_1px,transparent_1px),linear-gradient(to_bottom,#7A5C1E15_1px,transparent_1px)] bg-[size:2rem_2rem] z-10" />
             
             <div className="absolute inset-0 z-20 flex items-center justify-center">
-              <div className="w-32 h-32 rounded-full border border-gold/30 flex items-center justify-center relative">
-                <div className="absolute inset-0 rounded-full border-2 border-gold border-dashed animate-[spin_10s_linear_infinite]" />
-                <span className="font-display font-bold text-2xl text-gold">CAADS</span>
+              <div className="w-32 h-32 rounded-full border border-gold/40 flex items-center justify-center relative bg-bg/60 backdrop-blur-md shadow-2xl">
+                <div className="absolute inset-0 rounded-full border-2 border-gold border-dashed animate-[spin_12s_linear_infinite]" />
+                <span className="font-display font-bold text-3xl text-gold tracking-wider">CAADS</span>
               </div>
             </div>
           </div>
