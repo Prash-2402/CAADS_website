@@ -22,28 +22,37 @@ export async function loginAction(
   _prevState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
-  const raw = {
-    email: formData.get("email"),
-    password: formData.get("password"),
-  };
+  try {
+    const raw = {
+      email: formData.get("email"),
+      password: formData.get("password"),
+    };
 
-  // Server-side validation
-  const parsed = LoginSchema.safeParse(raw);
-  if (!parsed.success) {
-    return { fieldErrors: parsed.error.flatten().fieldErrors };
-  }
-
-  const { email, password } = parsed.data;
-
-  const supabase = createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    const rawMsg = typeof error === "string" ? error : error?.message || "Invalid email or password.";
-    if (rawMsg.toLowerCase().includes("email not confirmed")) {
-      return { error: "Email not confirmed. Please check your inbox for the confirmation link." };
+    // Server-side validation
+    const parsed = LoginSchema.safeParse(raw);
+    if (!parsed.success) {
+      return { fieldErrors: parsed.error.flatten().fieldErrors };
     }
-    return { error: String(rawMsg) };
+
+    const { email, password } = parsed.data;
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      const rawMsg = typeof error === "string" ? error : error?.message || "Invalid email or password.";
+      if (rawMsg.toLowerCase().includes("email not confirmed")) {
+        return { error: "Email not confirmed. Please check your inbox for the confirmation link." };
+      }
+      return { error: String(rawMsg) };
+    }
+  } catch (err: any) {
+    // Re-throw Next.js redirect exception so navigation occurs seamlessly
+    if (err?.message === "NEXT_REDIRECT" || err?.digest?.startsWith("NEXT_REDIRECT")) {
+      throw err;
+    }
+    console.error("Auth login exception:", err);
+    return { error: err?.message || String(err) || "An error occurred while communicating with the authentication server." };
   }
 
   redirect("/dashboard");
@@ -81,52 +90,57 @@ export async function signupAction(
   _prevState: SignupState,
   formData: FormData,
 ): Promise<SignupState> {
-  const raw = {
-    full_name: formData.get("full_name"),
-    reg_no: formData.get("reg_no"),
-    email: formData.get("email"),
-    password: formData.get("password"),
-  };
-
-  // Server-side validation
-  const parsed = SignupSchema.safeParse(raw);
-  if (!parsed.success) {
-    return { fieldErrors: parsed.error.flatten().fieldErrors };
-  }
-
-  const { full_name, reg_no, email, password } = parsed.data;
-
-  // Domain restriction — enforced server-side, never trust client
-  if (!isAllowedEmail(email)) {
-    return {
-      fieldErrors: {
-        email: ["Only Christ University email addresses are allowed (e.g. @christuniversity.in or @science.christuniversity.in)."],
-      },
+  try {
+    const raw = {
+      full_name: formData.get("full_name"),
+      reg_no: formData.get("reg_no"),
+      email: formData.get("email"),
+      password: formData.get("password"),
     };
-  }
 
-  const supabase = createClient();
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        full_name,
-        reg_no: reg_no.trim().toUpperCase(),
-      },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-    },
-  });
-
-  if (error) {
-    if (error.message.toLowerCase().includes("already registered")) {
-      return { error: "An account with this email already exists." };
+    // Server-side validation
+    const parsed = SignupSchema.safeParse(raw);
+    if (!parsed.success) {
+      return { fieldErrors: parsed.error.flatten().fieldErrors };
     }
-    return { error: error.message || "Something went wrong. Please try again." };
-  }
 
-  // Return success — user must verify email before logging in
-  return { success: true };
+    const { full_name, reg_no, email, password } = parsed.data;
+
+    // Domain restriction — enforced server-side, never trust client
+    if (!isAllowedEmail(email)) {
+      return {
+        fieldErrors: {
+          email: ["Only Christ University email addresses are allowed (e.g. @christuniversity.in or @science.christuniversity.in)."],
+        },
+      };
+    }
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name,
+          reg_no: reg_no.trim().toUpperCase(),
+        },
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      if (error.message.toLowerCase().includes("already registered")) {
+        return { error: "An account with this email already exists." };
+      }
+      return { error: error.message || "Something went wrong. Please try again." };
+    }
+
+    // Return success — user must verify email before logging in
+    return { success: true };
+  } catch (err: any) {
+    console.error("Auth signup exception:", err);
+    return { error: err?.message || String(err) || "An error occurred during account creation." };
+  }
 }
 
 export async function signOutAction() {
