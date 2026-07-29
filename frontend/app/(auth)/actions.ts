@@ -39,11 +39,11 @@ export async function loginAction(
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    // Return exact Supabase error message (e.g. "Email not confirmed", "Invalid login credentials")
-    if (error.message.toLowerCase().includes("email not confirmed")) {
+    const rawMsg = typeof error === "string" ? error : error?.message || "Invalid email or password.";
+    if (rawMsg.toLowerCase().includes("email not confirmed")) {
       return { error: "Email not confirmed. Please check your inbox for the confirmation link." };
     }
-    return { error: error.message || "Invalid email or password." };
+    return { error: String(rawMsg) };
   }
 
   redirect("/dashboard");

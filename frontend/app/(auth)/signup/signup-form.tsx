@@ -49,12 +49,16 @@ export function SignupForm() {
   return (
     <form action={formAction} className="space-y-5">
       {/* Global error */}
-      {state.error && (
+      {state?.error && (
         <div
           role="alert"
           className="rounded-xl border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-400 font-body"
         >
-          {state.error}
+          {typeof state.error === "string"
+            ? state.error
+            : typeof state.error === "object"
+            ? (state.error as any).message || JSON.stringify(state.error)
+            : String(state.error)}
         </div>
       )}
 
