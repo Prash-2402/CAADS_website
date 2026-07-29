@@ -50,6 +50,11 @@ const SignupSchema = z.object({
     .string()
     .min(2, "Full name must be at least 2 characters.")
     .max(100),
+  reg_no: z
+    .string()
+    .min(5, "Register Number / USN must be at least 5 characters (e.g. 2402001).")
+    .max(20, "Register Number / USN is too long.")
+    .regex(/^[A-Za-z0-9]+$/, "Register Number / USN can only contain letters and numbers."),
   email: z.string().email("Enter a valid email address."),
   password: z
     .string()
@@ -62,6 +67,7 @@ export type SignupState = {
   success?: boolean;
   fieldErrors?: {
     full_name?: string[];
+    reg_no?: string[];
     email?: string[];
     password?: string[];
   };
@@ -73,6 +79,7 @@ export async function signupAction(
 ): Promise<SignupState> {
   const raw = {
     full_name: formData.get("full_name"),
+    reg_no: formData.get("reg_no"),
     email: formData.get("email"),
     password: formData.get("password"),
   };
@@ -83,13 +90,13 @@ export async function signupAction(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { full_name, email, password } = parsed.data;
+  const { full_name, reg_no, email, password } = parsed.data;
 
   // Domain restriction — enforced server-side, never trust client
   if (!isAllowedEmail(email)) {
     return {
       fieldErrors: {
-        email: ["Only Christ University email addresses are allowed."],
+        email: ["Only Christ University email addresses are allowed (e.g. @christuniversity.in or @science.christuniversity.in)."],
       },
     };
   }
@@ -99,7 +106,10 @@ export async function signupAction(
     email,
     password,
     options: {
-      data: { full_name },
+      data: {
+        full_name,
+        reg_no: reg_no.trim().toUpperCase(),
+      },
       emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
     },
   });
@@ -108,7 +118,7 @@ export async function signupAction(
     if (error.message.toLowerCase().includes("already registered")) {
       return { error: "An account with this email already exists." };
     }
-    return { error: "Something went wrong. Please try again." };
+    return { error: error.message || "Something went wrong. Please try again." };
   }
 
   // Return success — user must verify email before logging in

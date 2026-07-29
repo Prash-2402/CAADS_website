@@ -10,14 +10,29 @@ export const ALLOWED_EMAIL_DOMAINS: string[] = [
 ];
 
 /**
- * Returns true if the email belongs to one of the allowed college domains.
+ * Returns true if the email belongs to one of the allowed college domains or subdomains.
  * Enforced server-side on every signup — never trust client input alone.
+ * Supports subdomains like @science.christuniversity.in, @mca.christuniversity.in, @res.christuniversity.in.
  */
 export function isAllowedEmail(email: string): boolean {
   const lower = email.toLowerCase().trim();
-  return ALLOWED_EMAIL_DOMAINS.some((domain) =>
-    lower.endsWith(`@${domain}`),
-  );
+  const atIndex = lower.indexOf("@");
+  if (atIndex === -1) return false;
+  const domain = lower.slice(atIndex + 1);
+
+  return ALLOWED_EMAIL_DOMAINS.some((allowed) => {
+    const allowedLower = allowed.toLowerCase().trim();
+    return domain === allowedLower || domain.endsWith(`.${allowedLower}`);
+  });
+}
+
+/**
+ * Helper to extract a 7 or 8-digit USN / Register Number from a student email address
+ * (e.g., 2402001@christuniversity.in -> 2402001, john.2130002@science.christuniversity.in -> 2130002)
+ */
+export function extractRegNoFromEmail(email: string): string | null {
+  const match = email.match(/\b\d{7,8}\b/);
+  return match ? match[0] : null;
 }
 
 /**

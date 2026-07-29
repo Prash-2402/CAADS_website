@@ -6,16 +6,20 @@ This guide provides step-by-step instructions to test **every single feature** o
 
 ## 📋 Test User Setup & Database Preparation
 
-To test all role-gated features effectively, create or configure test users in your Supabase `profiles` table:
+The login page (`/login`) includes **1-Click Quick Fill sample accounts** for all 4 user roles (`student`, `volunteer`, `core_team`, `admin`).
 
-| Test Account Role | `profiles.role` | `profiles.is_staff` | Allowed Email Domain |
-|-------------------|-----------------|---------------------|----------------------|
-| **Student** | `student` | `false` | `@christuniversity.in` |
-| **Volunteer** | `volunteer` | `true` | `@christuniversity.in` |
-| **Core Team** | `core_team` | `true` | `@christuniversity.in` |
-| **Admin** | `admin` | `true` | `@christuniversity.in` |
+### Pre-Configured Sample Accounts
 
-> 💡 **Tip:** You can manually update a user's `role` and `is_staff` columns in the Supabase Dashboard (`Table Editor -> profiles`).
+| Role Name | Email Address | Password | `profiles.role` | `is_staff` | Primary Testing Scope |
+|-----------|---------------|----------|-----------------|------------|----------------------|
+| **Admin User** | `admin@christuniversity.in` | `Password123!` | `admin` | `true` | Members directory, Role management, Site settings, Full audit |
+| **Core Team Lead** | `coreteam@christuniversity.in` | `Password123!` | `core_team` | `true` | Event management, Volunteer selection, Meetings & AI assistant |
+| **Volunteer Lead** | `volunteer.lead@christuniversity.in` | `Password123!` | `volunteer` | `true` | Volunteer portal, Duty assignment tracking & Yellow forms |
+| **Event Volunteer** | `volunteer@christuniversity.in` | `Password123!` | `volunteer` | `true` | Assignment accept/decline & personal staff QR badge |
+| **Regular Student** | `student@christuniversity.in` | `Password123!` | `student` | `false` | Event registration, Self-claim attendance & Student profile |
+| **Participant Student** | `student2@christuniversity.in` | `Password123!` | `student` | `false` | Secondary student account for multi-user test flows |
+
+> 💡 **Tip:** Click any sample login card on `/login` to auto-fill the email and password instantly. You can also seed these users into your Supabase database using `backend/supabase/seed.sql`.
 
 ---
 

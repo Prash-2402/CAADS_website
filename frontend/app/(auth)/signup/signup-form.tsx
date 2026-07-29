@@ -87,6 +87,39 @@ export function SignupForm() {
         )}
       </div>
 
+      {/* Register Number / USN */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor="signup-reg-no"
+            className="block font-body text-sm font-medium text-ivory"
+          >
+            Register Number / USN
+          </label>
+          <span className="font-mono text-[10px] text-muted">
+            Format: 7-8 digits (e.g. 2402001)
+          </span>
+        </div>
+        <input
+          id="signup-reg-no"
+          name="reg_no"
+          type="text"
+          required
+          placeholder="e.g. 2402001 or 2130005"
+          className="
+            w-full rounded-xl border border-border-gold bg-bg px-4 py-2.5
+            font-body text-sm text-ivory placeholder:text-muted font-mono
+            focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold
+            transition-colors duration-150
+          "
+        />
+        {state.fieldErrors?.reg_no && (
+          <p className="text-xs text-red-400 font-body">
+            {state.fieldErrors.reg_no[0]}
+          </p>
+        )}
+      </div>
+
       {/* Email */}
       <div className="space-y-1.5">
         <label
@@ -101,7 +134,17 @@ export function SignupForm() {
           type="email"
           autoComplete="email"
           required
-          placeholder="you@christuniversity.in"
+          placeholder="you@christuniversity.in or 2402001@science.christuniversity.in"
+          onChange={(e) => {
+            const val = e.target.value;
+            const regInput = document.getElementById("signup-reg-no") as HTMLInputElement | null;
+            if (regInput && !regInput.value) {
+              const match = val.match(/\b\d{7,8}\b/);
+              if (match) {
+                regInput.value = match[0];
+              }
+            }
+          }}
           className="
             w-full rounded-xl border border-border-gold bg-bg px-4 py-2.5
             font-body text-sm text-ivory placeholder:text-muted
