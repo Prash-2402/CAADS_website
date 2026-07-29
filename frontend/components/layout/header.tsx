@@ -53,7 +53,7 @@ export function Header({ userRole }: HeaderProps) {
             </Link>
 
             {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-6" aria-label="Main navigation">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -69,15 +69,22 @@ export function Header({ userRole }: HeaderProps) {
           <button
             className="md:hidden p-2 text-ivory"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav-menu"
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileMenuOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
           </button>
         </div>
       </div>
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-bg-secondary border-b border-border-gold shadow-lg py-4 px-6 flex flex-col gap-4">
+        <nav
+          id="mobile-nav-menu"
+          className="md:hidden absolute top-full left-0 right-0 bg-bg-secondary border-b border-border-gold shadow-lg py-4 px-6 flex flex-col gap-4"
+          aria-label="Mobile navigation"
+        >
           {navLinks.map((link) => (
             <Link
               key={link.name}
@@ -88,7 +95,7 @@ export function Header({ userRole }: HeaderProps) {
               {link.name}
             </Link>
           ))}
-        </div>
+        </nav>
       )}
     </header>
   );

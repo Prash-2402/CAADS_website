@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/supabase/auth";
 import { revalidatePath } from "next/cache";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 export type ActionState = {
   error?: string;
@@ -18,6 +19,17 @@ export async function registerForEventAction(
 
   if (!profile) {
     return { error: "You must be logged in to register." };
+  }
+
+  // Rate-limit: max 5 event registrations per 10 minutes per user/IP
+  const rateCheck = await enforceRateLimit({
+    action: "event_registration",
+    userId: profile.id,
+    maxAttempts: 5,
+    windowSeconds: 600,
+  });
+  if (!rateCheck.allowed) {
+    return { error: rateCheck.message };
   }
 
   const supabase = createClient();

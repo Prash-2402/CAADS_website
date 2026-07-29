@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getRole } from "@/lib/supabase/auth";
 import { revalidatePath } from "next/cache";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 async function checkLeader() {
   const role = await getRole();
@@ -154,6 +155,17 @@ export async function submitSelfClaim(eventId: string) {
     } = await supabase.auth.getUser();
 
     if (!user) return { success: false, error: "Authentication required" };
+
+    // Rate-limit: max 3 self-claims per 5 minutes per user/IP
+    const rateCheck = await enforceRateLimit({
+      action: "attendance_self_claim",
+      userId: user.id,
+      maxAttempts: 3,
+      windowSeconds: 300,
+    });
+    if (!rateCheck.allowed) {
+      return { success: false, error: rateCheck.message };
+    }
 
     // Check event registration
     const { data: reg } = await supabase

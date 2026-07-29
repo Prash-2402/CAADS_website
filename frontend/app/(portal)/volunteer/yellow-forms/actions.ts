@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/supabase/auth";
 import { revalidatePath } from "next/cache";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 const YellowFormSchema = z.object({
   eventId: z.string().uuid("Invalid event ID"),
@@ -27,6 +28,17 @@ export async function requestYellowFormAction(
 
   if (!profile) {
     return { error: "You must be logged in." };
+  }
+
+  // Rate-limit: max 2 yellow form requests per 10 minutes per user/IP
+  const rateCheck = await enforceRateLimit({
+    action: "yellow_form_request",
+    userId: profile.id,
+    maxAttempts: 2,
+    windowSeconds: 600,
+  });
+  if (!rateCheck.allowed) {
+    return { error: rateCheck.message };
   }
 
   const raw = {

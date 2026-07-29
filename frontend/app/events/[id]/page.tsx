@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { Calendar, Clock, MapPin, User, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { RegistrationButton } from "./_components/registration-button";
 import type { Metadata } from "next";
 
@@ -73,11 +74,12 @@ export default async function EventDetailPage({ params }: { params: { id: string
           {/* Header/Poster Area */}
           <div className="relative h-48 md:h-64 bg-gold/5 border-b border-border-gold flex items-center justify-center overflow-hidden group">
             {event.poster_url ? (
-              // Would use next/image here when real URLs are available
-              <img 
-                src={event.poster_url} 
-                alt={event.title} 
-                className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
+              <Image
+                src={event.poster_url}
+                alt={event.title}
+                fill
+                className="object-cover opacity-60 group-hover:opacity-80 transition-opacity"
+                sizes="(max-width: 768px) 100vw, 800px"
               />
             ) : (
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold/20 via-bg-secondary to-bg-secondary" />

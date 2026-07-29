@@ -1,5 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { PublicLayout } from "@/components/layout/public-layout";
 import type { Metadata } from "next";
 
@@ -44,7 +46,13 @@ export default async function PublicProfilePage({ params }: { params: { user_id:
             {/* Avatar */}
             <div className="w-32 h-32 mx-auto rounded-full bg-bg border-4 border-gold/50 flex items-center justify-center overflow-hidden mb-6 shadow-xl">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
+                <Image
+                  src={profile.avatar_url}
+                  alt={profile.full_name}
+                  fill
+                  className="object-cover"
+                  sizes="128px"
+                />
               ) : (
                 <div className="w-full h-full bg-gold/10 flex items-center justify-center text-gold font-display font-bold text-5xl">
                   {profile.full_name.charAt(0).toUpperCase()}

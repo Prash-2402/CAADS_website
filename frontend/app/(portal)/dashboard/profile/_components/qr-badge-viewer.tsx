@@ -1,3 +1,6 @@
+// next/image does not support data: URLs (generated client-side by the qrcode library).
+// The img tag here is intentional — disabling the lint warning.
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useState } from "react";
