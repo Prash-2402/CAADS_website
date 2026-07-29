@@ -168,3 +168,52 @@ export async function buildYellowFormsExport(): Promise<Buffer> {
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
 }
+
+/**
+ * Builds a single-sheet Excel workbook of meeting attendance records.
+ */
+export async function buildMeetingAttendanceExport(meetingId: string): Promise<Buffer> {
+  const supabase = getServiceRoleSupabase();
+
+  // Fetch meeting title for context
+  const { data: meeting } = await supabase
+    .from("meetings")
+    .select("title")
+    .eq("id", meetingId)
+    .single();
+  const meetingTitle = meeting?.title || "Meeting";
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "CAADS Platform";
+
+  const sheet = workbook.addWorksheet("Meeting Attendance");
+  sheet.columns = [
+    { header: "Full Name", key: "name", width: 30 },
+    { header: "Registration No", key: "regNo", width: 20 },
+    { header: "Check-in Method", key: "method", width: 20 },
+    { header: "Status", key: "status", width: 15 },
+    { header: "Recorded At", key: "createdAt", width: 25 },
+  ];
+
+  const { data: records } = await supabase
+    .from("meeting_attendance")
+    .select("method, status, created_at, profiles(full_name, reg_no)")
+    .eq("meeting_id", meetingId)
+    .order("created_at", { ascending: true });
+
+  records?.forEach((r) => {
+    const prof = r.profiles as any;
+    sheet.addRow({
+      name: prof?.full_name || "N/A",
+      regNo: prof?.reg_no || "N/A",
+      method: r.method,
+      status: r.status,
+      createdAt: new Date(r.created_at).toLocaleString(),
+    });
+  });
+
+  sheet.getRow(1).font = { bold: true };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
+}

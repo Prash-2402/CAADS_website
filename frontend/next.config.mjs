@@ -6,6 +6,16 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        // Supabase project storage — avatar images
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
+      {
+        // Supabase project storage (alternative subdomain pattern)
+        protocol: "https",
+        hostname: "*.supabase.in",
+      },
     ],
   },
 };

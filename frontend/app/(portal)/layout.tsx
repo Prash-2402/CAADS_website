@@ -1,7 +1,7 @@
 import { getProfile } from "@/lib/supabase/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, CalendarDays, ClipboardCheck, QrCode, LogOut, FileText } from "lucide-react";
+import { LayoutDashboard, CalendarDays, ClipboardCheck, QrCode, LogOut, FileText, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PortalLayout({
@@ -16,6 +16,7 @@ export default async function PortalLayout({
   }
 
   const isVolunteer = ["volunteer", "core_team", "admin"].includes(profile.role);
+  const isLeader = ["core_team", "admin"].includes(profile.role);
   
   return (
     <div className="min-h-screen bg-bg flex flex-col md:flex-row pt-16">
@@ -73,6 +74,21 @@ export default async function PortalLayout({
                 >
                   <FileText size={18} />
                   Yellow Forms
+                </Link>
+              </>
+            )}
+
+            {isLeader && (
+              <>
+                <div className="text-xs font-semibold text-muted uppercase tracking-wider mb-2 mt-8">
+                  Leader Space
+                </div>
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-gold hover:bg-gold/10 transition-colors font-body text-sm font-semibold"
+                >
+                  <Shield size={18} />
+                  Admin Panel
                 </Link>
               </>
             )}

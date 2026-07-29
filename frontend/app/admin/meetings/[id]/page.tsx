@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Clock, BookOpen, Users, FileText, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, BookOpen, Users, FileText, CheckCircle2, FileSpreadsheet } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import MinutesEditor from "./minutes-editor";
 import { logMeetingAttendance } from "../actions";
@@ -74,14 +74,24 @@ export default async function MeetingDetailPage({
 
   return (
     <div className="max-w-6xl space-y-8">
-      <div className="flex items-center gap-4">
-        <Link href="/admin/meetings" className="text-muted hover:text-ivory transition-colors">
-          <ArrowLeft size={24} />
-        </Link>
-        <div>
-          <h1 className="font-display text-3xl font-bold text-ivory">{meeting.title}</h1>
-          <p className="font-body text-muted mt-1">Configure meeting minutes and record attendance.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/meetings" className="text-muted hover:text-ivory transition-colors">
+            <ArrowLeft size={24} />
+          </Link>
+          <div>
+            <h1 className="font-display text-3xl font-bold text-ivory">{meeting.title}</h1>
+            <p className="font-body text-muted mt-1">Configure meeting minutes and record attendance.</p>
+          </div>
         </div>
+
+        <Link
+          href={`/api/export?meeting_id=${meeting.id}`}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gold/10 text-gold border border-gold hover:bg-gold hover:text-bg font-semibold text-sm transition-all self-start sm:self-center"
+        >
+          <FileSpreadsheet size={18} />
+          Export Attendance
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

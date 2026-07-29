@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRole } from "@/lib/supabase/auth";
-import { buildEventMultiSheetExport, buildYellowFormsExport } from "@/lib/export/excel";
+import { buildEventMultiSheetExport, buildYellowFormsExport, buildMeetingAttendanceExport } from "@/lib/export/excel";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +14,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const eventId = searchParams.get("event_id");
+    const meetingId = searchParams.get("meeting_id");
     const type = searchParams.get("type");
 
     let buffer: Buffer;
@@ -22,6 +23,9 @@ export async function GET(req: Request) {
     if (eventId) {
       buffer = await buildEventMultiSheetExport(eventId);
       filename = `event-${eventId}-export.xlsx`;
+    } else if (meetingId) {
+      buffer = await buildMeetingAttendanceExport(meetingId);
+      filename = `meeting-${meetingId}-attendance.xlsx`;
     } else if (type === "yellow_forms") {
       buffer = await buildYellowFormsExport();
       filename = "yellow-forms-export.xlsx";
