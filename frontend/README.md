@@ -4,6 +4,8 @@
 
 A full-stack university club management platform serving four user roles: `student`, `volunteer`, `core_team`, and `admin`.
 
+👉 **Looking to test features?** See the step-by-step [Testing Guide](./TESTING_GUIDE.md).
+
 ---
 
 ## Tech Stack
