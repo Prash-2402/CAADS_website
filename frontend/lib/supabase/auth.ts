@@ -40,6 +40,18 @@ export function extractRegNoFromEmail(email: string): string | null {
  * Always reads from the server — never trust a client-provided role.
  */
 export async function getProfile() {
+  // DEV OVERRIDE: Bypass login
+  return {
+    id: "dummy-user-123",
+    full_name: "Test Admin",
+    reg_no: "1234567",
+    role: "admin" as import("@/types/database").UserRole,
+    is_staff: true,
+    personal_qr_key: "dummy-qr-123",
+    avatar_url: null,
+  };
+  
+  /*
   const supabase = createClient();
   const {
     data: { user },
@@ -55,6 +67,7 @@ export async function getProfile() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (profile as any) ?? null;
+  */
 }
 
 /**

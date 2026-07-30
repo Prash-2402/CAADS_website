@@ -11,9 +11,10 @@ import {
 
 const marketingSettingsSchema = z.object({
   aboutTitle: z.string().min(1, "About title is required."),
-  aboutDescription: z.string().min(1, "About description is required."),
-  mission: z.string().min(1, "Mission is required."),
+  aboutInauguration: z.string().min(1, "About inauguration is required."),
+  missionJson: z.string().min(1, "Mission JSON is required."),
   vision: z.string().min(1, "Vision is required."),
+  objectivesJson: z.string().min(1, "Objectives JSON is required."),
   highlightsJson: z.string().min(1, "Highlights JSON is required."),
   teamJson: z.string().min(1, "Team JSON is required."),
 });
@@ -35,13 +36,16 @@ export async function updateMarketingSettingsAction(formData: FormData) {
 
   const parsed = marketingSettingsSchema.parse({
     aboutTitle: formData.get("aboutTitle"),
-    aboutDescription: formData.get("aboutDescription"),
-    mission: formData.get("mission"),
+    aboutInauguration: formData.get("aboutInauguration"),
+    missionJson: formData.get("missionJson"),
     vision: formData.get("vision"),
+    objectivesJson: formData.get("objectivesJson"),
     highlightsJson: formData.get("highlightsJson"),
     teamJson: formData.get("teamJson"),
   });
 
+  const mission = parseJsonArray(parsed.missionJson, z.string());
+  const objectives = parseJsonArray(parsed.objectivesJson, z.string());
   const highlights = parseJsonArray(parsed.highlightsJson, highlightItemSchema);
   const teamMembers = parseJsonArray(parsed.teamJson, teamMemberSchema);
 
@@ -49,9 +53,10 @@ export async function updateMarketingSettingsAction(formData: FormData) {
   const { error } = await supabase.from("site_settings").upsert({
     id: true,
     about_title: parsed.aboutTitle,
-    about_description: parsed.aboutDescription,
-    mission: parsed.mission,
+    about_inauguration: parsed.aboutInauguration,
+    mission,
     vision: parsed.vision,
+    objectives,
     highlights,
     team_members: teamMembers,
     updated_at: new Date().toISOString(),

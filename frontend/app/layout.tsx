@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import {
+  Space_Grotesk,
+  IBM_Plex_Sans,
+  IBM_Plex_Mono,
+  Mrs_Saint_Delafield,
+  Mr_De_Haviland,
+  Herr_Von_Muellerhoff,
+  Monsieur_La_Doulaise,
+  Miss_Fajardose,
+} from "next/font/google";
 import "./globals.css";
 
 // ── Display font: Space Grotesk (headings) ───────────────────
@@ -26,6 +35,47 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+// ── Signature script fonts (Office Bearers section only) ────
+const mrsSaintDelafield = Mrs_Saint_Delafield({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-mrs-saint-delafield",
+  display: "swap",
+  preload: false,
+});
+
+const mrDeHaviland = Mr_De_Haviland({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-mr-de-haviland",
+  display: "swap",
+  preload: false,
+});
+
+const herrVonMuellerhoff = Herr_Von_Muellerhoff({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-herr-von-muellerhoff",
+  display: "swap",
+  preload: false,
+});
+
+const monsieurLaDoulaise = Monsieur_La_Doulaise({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-monsieur-la-doulaise",
+  display: "swap",
+  preload: false,
+});
+
+const missFajardose = Miss_Fajardose({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-miss-fajardose",
+  display: "swap",
+  preload: false,
+});
+
 export const metadata: Metadata = {
   title: {
     default: "CAADS — AI Thinks & Data Speaks",
@@ -50,7 +100,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable}`}
+      className={[
+        spaceGrotesk.variable,
+        ibmPlexSans.variable,
+        ibmPlexMono.variable,
+        mrsSaintDelafield.variable,
+        mrDeHaviland.variable,
+        herrVonMuellerhoff.variable,
+        monsieurLaDoulaise.variable,
+        missFajardose.variable,
+      ].join(" ")}
     >
       <body className="antialiased bg-bg text-ivory font-body">
         {children}

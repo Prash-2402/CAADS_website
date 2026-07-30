@@ -1,7 +1,8 @@
 import { Hero } from "./_components/hero";
 import { About } from "./_components/about";
-import { Highlights } from "./_components/highlights";
-import { Team } from "./_components/team";
+import { History } from "./_components/history";
+import { Achievements } from "./_components/achievements";
+import { OfficeBearers } from "./_components/office-bearers";
 import { Contact } from "./_components/contact";
 
 export default function MarketingHome() {
@@ -9,8 +10,9 @@ export default function MarketingHome() {
     <>
       <Hero />
       <About />
-      <Highlights />
-      <Team />
+      <History />
+      <Achievements />
+      <OfficeBearers />
       <Contact />
     </>
   );

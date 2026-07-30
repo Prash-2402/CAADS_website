@@ -4,12 +4,12 @@
 
 /* ── CAADS Design Tokens ───────────────────────────────────── */
 :root {
-  --bg:           #0A0A0A;
-  --bg-secondary: #151515;
+  --bg:           #FAF8F4;  /* cream white       — primary background  */
+  --bg-secondary: #EDE8E0;  /* warm cream        — cards / sections    */
   --gold:         #C9A227;
   --gold-bright:  #E8B93E;
-  --ivory:        #F2EDE4;
-  --muted:        #B8B2A7;
+  --ivory:        #1C1611;  /* warm near-black   — primary text        */
+  --muted:        #7A7268;  /* warm mid-gray     — secondary text      */
   --border-gold:  #7A5C1E;
 }
 
@@ -35,11 +35,11 @@
 
   /* Selection highlight */
   ::selection {
-    background-color: rgba(201, 162, 39, 0.25);
+    background-color: rgba(201, 162, 39, 0.30);
     color: var(--ivory);
   }
 
-  /* Scrollbar — subtle gold-tinted dark */
+  /* Scrollbar — gold on cream */
   ::-webkit-scrollbar {
     width: 6px;
   }
@@ -69,9 +69,9 @@
     background-clip: text;
   }
 
-  /* Glass card effect */
+  /* Glass card — frosted cream on light theme */
   .glass {
-    background: rgba(21, 21, 21, 0.7);
+    background: rgba(250, 248, 244, 0.82);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border-gold);
@@ -79,6 +79,40 @@
 
   /* Subtle gold border with transparency */
   .border-gold-subtle {
-    border-color: rgba(122, 92, 30, 0.4);
+    border-color: rgba(201, 162, 39, 0.35);
   }
+}
+
+/* ── Reduced motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Pen-tip dot for signature reveal ─────────────────────── */
+/*
+  .pen-dot-traveling: fires when the badge is clicked/tapped.
+  The dot travels from left:0 to left:100% over 480ms (matching
+  the clip-path reveal duration), then fades out at the very end.
+  animation-fill-mode: forwards keeps it hidden after it finishes.
+*/
+@keyframes pen-dot-travel {
+  0%   { left: 0%;    opacity: 1; }
+  85%  { opacity: 1; }
+  100% { left: 100%;  opacity: 0; }
+}
+
+.pen-dot-traveling {
+  animation: pen-dot-travel 480ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* .pen-dot-idle: dot is invisible when the reveal is not active */
+.pen-dot-idle {
+  opacity: 0;
 }

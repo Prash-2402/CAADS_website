@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LoginForm } from "./login-form";
+import { getProfile } from "@/lib/supabase/auth";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Sign In",
   description: "Sign in to the CAADS platform.",
 };
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const profile = await getProfile();
+  if (profile) redirect("/dashboard");
   return (
     <div className="space-y-6">
       <div>

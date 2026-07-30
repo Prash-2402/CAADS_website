@@ -124,22 +124,12 @@ export default async function AdminSettingsPage({
               />
             </div>
             <div className="md:col-span-2">
-              <label htmlFor="aboutDescription" className="mb-2 block text-sm font-medium text-ivory">About Description</label>
+              <label htmlFor="aboutInauguration" className="mb-2 block text-sm font-medium text-ivory">About Inauguration</label>
               <textarea
-                id="aboutDescription"
-                name="aboutDescription"
+                id="aboutInauguration"
+                name="aboutInauguration"
                 rows={5}
-                defaultValue={settings.about_description}
-                className="w-full rounded-xl border border-border-gold bg-bg px-4 py-2.5 text-sm text-ivory focus:border-gold focus:outline-none"
-              />
-            </div>
-            <div>
-              <label htmlFor="mission" className="mb-2 block text-sm font-medium text-ivory">Mission</label>
-              <textarea
-                id="mission"
-                name="mission"
-                rows={4}
-                defaultValue={settings.mission}
+                defaultValue={settings.about_inauguration}
                 className="w-full rounded-xl border border-border-gold bg-bg px-4 py-2.5 text-sm text-ivory focus:border-gold focus:outline-none"
               />
             </div>
@@ -151,6 +141,26 @@ export default async function AdminSettingsPage({
                 rows={4}
                 defaultValue={settings.vision}
                 className="w-full rounded-xl border border-border-gold bg-bg px-4 py-2.5 text-sm text-ivory focus:border-gold focus:outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="missionJson" className="mb-2 block text-sm font-medium text-ivory">Mission JSON</label>
+              <textarea
+                id="missionJson"
+                name="missionJson"
+                rows={6}
+                defaultValue={JSON.stringify(settings.mission, null, 2)}
+                className="w-full rounded-xl border border-border-gold bg-bg px-4 py-2.5 font-mono text-xs text-ivory focus:border-gold focus:outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="objectivesJson" className="mb-2 block text-sm font-medium text-ivory">Objectives JSON</label>
+              <textarea
+                id="objectivesJson"
+                name="objectivesJson"
+                rows={6}
+                defaultValue={JSON.stringify(settings.objectives, null, 2)}
+                className="w-full rounded-xl border border-border-gold bg-bg px-4 py-2.5 font-mono text-xs text-ivory focus:border-gold focus:outline-none"
               />
             </div>
             <div>

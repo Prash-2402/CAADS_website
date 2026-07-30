@@ -25,8 +25,9 @@ export function Header({ userRole }: HeaderProps) {
 
   const navLinks = [
     { name: "About", href: isHome ? "#about" : "/#about" },
-    { name: "Highlights", href: isHome ? "#highlights" : "/#highlights" },
-    { name: "Team", href: isHome ? "#team" : "/#team" },
+    { name: "History", href: isHome ? "#history" : "/#history" },
+    { name: "Achievements", href: isHome ? "#achievements" : "/#achievements" },
+    { name: "Office Bearers", href: isHome ? "#office-bearers" : "/#office-bearers" },
     { name: "Events", href: "/events" },
   ];
 
@@ -45,10 +46,24 @@ export function Header({ userRole }: HeaderProps) {
           {/* Left Side: Logo + Nav */}
           <div className="flex flex-col gap-4">
             {/* Logo */}
-            <Link href="/" className="group inline-block">
-              <span className="font-display text-lg md:text-xl font-bold text-ivory tracking-tight group-hover:text-gold transition-colors leading-snug">
+            <Link href="/" className="group relative inline-flex items-center min-h-[64px]">
+              {/* Invisible placeholder to maintain layout size */}
+              <span className="font-display text-lg md:text-xl font-bold text-transparent select-none pointer-events-none leading-snug" aria-hidden="true">
                 Christite Association for Artificial<br />
                 Intelligence & Data Science
+              </span>
+
+              {/* CAADS (Visible by default) */}
+              <span className="font-display text-4xl md:text-5xl font-black text-ivory tracking-tighter absolute inset-0 flex items-center transition-all duration-500 ease-out group-hover:opacity-0 group-hover:-translate-y-4 group-hover:scale-95 group-hover:blur-sm origin-left">
+                CAADS
+              </span>
+
+              {/* Full Name (Visible on hover) */}
+              <span className="font-display text-lg md:text-xl font-bold text-gold tracking-tight leading-snug absolute inset-0 flex items-center transition-all duration-500 ease-out opacity-0 translate-y-4 scale-105 blur-sm group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 group-hover:blur-0 origin-left">
+                <span>
+                  Christite Association for Artificial<br />
+                  Intelligence & Data Science
+                </span>
               </span>
             </Link>
 

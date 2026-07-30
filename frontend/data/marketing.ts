@@ -9,10 +9,26 @@ export const marketingData = {
   },
   about: {
     title: "About CAADS",
-    description:
-      "The Christ University AI & Data Science Club (CAADS) is dedicated to fostering a community of students who are passionate about the future of technology. We host workshops, seminars, and hackathons to bridge the gap between academic learning and industry application.",
-    mission: "To empower students with the knowledge and skills required to excel in AI and Data Science.",
-    vision: "To be the leading student community in India for AI research and data-driven innovation.",
+    inauguration: "The Christite Association for Artificial Intelligence and Data Science (CAADS) was formally inaugurated on 2nd August 2025, in the gracious presence of the Dean, Associate Dean, Head of the Department - AIML & Data Science, Faculty Coordinator – CAADS, and all the faculty members of the department.",
+    vision: "To cultivate a vibrant, inclusive, and future-ready community of learners, innovators, and leaders in the fields of Artificial Intelligence, Machine Learning, and Data Science empowered to create sustainable technological impact in academia, industry, and society.",
+    mission: [
+      "Foster interest and excellence in Artificial Intelligence, Machine Learning, Data Science, and emerging technologies.",
+      "Provide a collaborative platform for students to innovate, share knowledge, and develop problem-solving skills.",
+      "Organize a wide range of technical and non-technical events including workshops, hackathons, seminars, and competitions.",
+      "Bridge the gap between academic learning and industrial expectations through guest lectures, internships, and industry collaborations.",
+      "Promote peer learning, leadership, teamwork, and holistic student development through inclusive and student-driven initiatives."
+    ],
+    objectives: [
+      "To cultivate a vibrant community of learners and innovators passionate about Artificial Intelligence, Machine Learning, Data Science, and related emerging technologies.",
+      "To create opportunities for students to enhance their technical skills through workshops, coding competitions, technical talks, and hands-on projects.",
+      "To facilitate industry interactions by organizing guest lectures, panel discussions, industrial visits, internships, and collaborative projects.",
+      "To promote interdisciplinary learning by encouraging collaboration with other departments and external organizations.",
+      "To provide a platform for students to showcase their projects, research work, and innovative ideas through exhibitions and technical fests.",
+      "To nurture leadership, teamwork, communication, and entrepreneurial skills by involving students in planning and executing events.",
+      "To support students in career development by conducting resume-building sessions, mock interviews, and connecting them with networks.",
+      "To encourage community outreach and ethical use of AI by organizing awareness programs and promoting responsible AI practices.",
+      "To ensure inclusivity and diversity by actively involving students from various backgrounds and fostering an open culture."
+    ]
   },
   highlights: [
     {
