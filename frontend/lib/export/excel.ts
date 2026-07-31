@@ -19,15 +19,24 @@ function getServiceRoleSupabase() {
 export async function buildEventMultiSheetExport(eventId: string): Promise<Buffer> {
   const supabase = getServiceRoleSupabase();
 
-  // Fetch event details
-  const { data: event } = await supabase.from("events").select("title").eq("id", eventId).single();
+  // Verify service role client works
+  const { data: event, error: eventError } = await supabase
+    .from("events")
+    .select("title")
+    .eq("id", eventId)
+    .single();
+
+  if (eventError) {
+    console.error("[Excel] Failed to fetch event:", eventError.message);
+  }
   const eventTitle = event?.title || "Event";
+  console.log("[Excel] Building export for event:", eventTitle, "id:", eventId);
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "CAADS Platform";
   workbook.created = new Date();
 
-  // 1. Sheet: Registrations
+  // ── 1. Sheet: Registrations ──────────────────────────────────────────────
   const regSheet = workbook.addWorksheet("Registrations");
   regSheet.columns = [
     { header: "Full Name", key: "name", width: 30 },
@@ -36,25 +45,37 @@ export async function buildEventMultiSheetExport(eventId: string): Promise<Buffe
     { header: "Registered At", key: "registeredAt", width: 25 },
   ];
 
-  const { data: registrations } = await supabase
+  const { data: regRows, error: regError } = await supabase
     .from("event_registrations")
-    .select("registered_at, profiles(full_name, reg_no, role)")
+    .select("user_id, registered_at")
     .eq("event_id", eventId);
 
-  registrations?.forEach((r) => {
-    const prof = r.profiles as any;
-    regSheet.addRow({
-      name: prof?.full_name || "N/A",
-      regNo: prof?.reg_no || "N/A",
-      role: prof?.role || "N/A",
-      registeredAt: new Date(r.registered_at).toLocaleString(),
-    });
-  });
+  console.log("[Excel] Registrations fetched:", regRows?.length ?? 0, "error:", regError?.message);
 
-  // Apply basic header styling
+  if (regRows && regRows.length > 0) {
+    const regUserIds = regRows.map((r) => r.user_id);
+    const { data: regProfiles, error: regProfileErr } = await supabase
+      .from("profiles")
+      .select("id, full_name, reg_no, role")
+      .in("id", regUserIds);
+
+    console.log("[Excel] Reg profiles fetched:", regProfiles?.length ?? 0, "error:", regProfileErr?.message);
+    const regProfileMap = new Map(regProfiles?.map((p) => [p.id, p]) ?? []);
+
+    regRows.forEach((r) => {
+      const prof = regProfileMap.get(r.user_id);
+      regSheet.addRow({
+        name: prof?.full_name || "N/A",
+        regNo: prof?.reg_no || "N/A",
+        role: prof?.role || "N/A",
+        registeredAt: r.registered_at ? new Date(r.registered_at).toLocaleString() : "N/A",
+      });
+    });
+  }
+
   regSheet.getRow(1).font = { bold: true };
 
-  // 2. Sheet: Attendance
+  // ── 2. Sheet: Attendance ─────────────────────────────────────────────────
   const attSheet = workbook.addWorksheet("Attendance");
   attSheet.columns = [
     { header: "Full Name", key: "name", width: 30 },
@@ -64,23 +85,21 @@ export async function buildEventMultiSheetExport(eventId: string): Promise<Buffe
     { header: "Checked At", key: "checkedAt", width: 25 },
   ];
 
-  // Two-step fetch to avoid PostgREST FK hint issues with the service-role client
   const { data: attendanceRows, error: attError } = await supabase
     .from("attendance")
     .select("user_id, method, status, updated_at, created_at")
     .eq("event_id", eventId);
 
-  if (attError) {
-    console.error("[Excel Export] Attendance fetch error:", attError.message);
-  }
+  console.log("[Excel] Attendance fetched:", attendanceRows?.length ?? 0, "error:", attError?.message);
 
   if (attendanceRows && attendanceRows.length > 0) {
     const attUserIds = attendanceRows.map((a) => a.user_id);
-    const { data: attProfiles } = await supabase
+    const { data: attProfiles, error: attProfileErr } = await supabase
       .from("profiles")
       .select("id, full_name, reg_no")
       .in("id", attUserIds);
 
+    console.log("[Excel] Att profiles fetched:", attProfiles?.length ?? 0, "error:", attProfileErr?.message);
     const attProfileMap = new Map(attProfiles?.map((p) => [p.id, p]) ?? []);
 
     attendanceRows.forEach((a) => {
@@ -98,7 +117,7 @@ export async function buildEventMultiSheetExport(eventId: string): Promise<Buffe
 
   attSheet.getRow(1).font = { bold: true };
 
-  // 3. Sheet: Yellow Forms
+  // ── 3. Sheet: Yellow Forms ───────────────────────────────────────────────
   const yfSheet = workbook.addWorksheet("Yellow Forms");
   yfSheet.columns = [
     { header: "Full Name", key: "name", width: 30 },
@@ -108,15 +127,12 @@ export async function buildEventMultiSheetExport(eventId: string): Promise<Buffe
     { header: "Requested At", key: "createdAt", width: 25 },
   ];
 
-  // Two-step fetch for yellow forms as well for consistency
   const { data: yfRows, error: yfError } = await supabase
     .from("yellow_forms")
     .select("user_id, periods, status, created_at")
     .eq("event_id", eventId);
 
-  if (yfError) {
-    console.error("[Excel Export] Yellow forms fetch error:", yfError.message);
-  }
+  console.log("[Excel] Yellow forms fetched:", yfRows?.length ?? 0, "error:", yfError?.message);
 
   if (yfRows && yfRows.length > 0) {
     const yfUserIds = yfRows.map((yf) => yf.user_id);
