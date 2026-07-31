@@ -5,8 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { isAllowedEmail } from "@/lib/supabase/auth";
 
-import { STAFF_SECRETS } from "@/lib/staff-usns";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
 
 const LoginSchema = z.object({
   email: z.string().email("Enter a valid email address."),
@@ -54,38 +53,7 @@ export async function loginAction(
     const supabase = createClient();
     let { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    // Handle First-Time Staff Activation (if login fails)
-    if (error && error.message.toLowerCase().includes("invalid login credentials")) {
-      const isCoreTeam = STAFF_SECRETS.coreTeamUSNs.includes(usn);
-      const isVolunteer = STAFF_SECRETS.volunteerUSNs.includes(usn);
-      
-      if ((isCoreTeam || isVolunteer) && password === STAFF_SECRETS.initialPassword) {
-        // Create user via Admin API to bypass email confirmation
-        const supabaseAdmin = createSupabaseClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
 
-        const { error: createError } = await supabaseAdmin.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true,
-          user_metadata: {
-            reg_no: usn,
-            assigned_role: isCoreTeam ? "core_team" : "volunteer"
-          }
-        });
-
-        if (createError) {
-          return { error: createError.message || "Failed to activate staff account." };
-        }
-
-        // Now log them in normally
-        const loginAttempt = await supabase.auth.signInWithPassword({ email, password });
-        authData = loginAttempt.data;
-        error = loginAttempt.error;
-      }
-    }
 
     if (error) {
       const rawMsg = typeof error === "string" ? error : error?.message || "Invalid email or password.";

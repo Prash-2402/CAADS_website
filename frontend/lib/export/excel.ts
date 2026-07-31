@@ -66,7 +66,7 @@ export async function buildEventMultiSheetExport(eventId: string): Promise<Buffe
 
   const { data: attendance } = await supabase
     .from("attendance")
-    .select("method, status, updated_at, profiles(full_name, reg_no)")
+    .select("method, status, updated_at, profiles!attendance_user_id_fkey(full_name, reg_no)")
     .eq("event_id", eventId);
 
   attendance?.forEach((a) => {

@@ -9,8 +9,7 @@ import type { Database } from "@/types/database";
 export function createClient() {
   const cookieStore = cookies();
 
-  // DEV OVERRIDE: Use service role key to bypass RLS since we bypassed login
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
   return createServerClient<any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

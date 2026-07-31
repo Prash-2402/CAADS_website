@@ -42,13 +42,51 @@ export default async function EventAttendancePage({
     .eq("event_id", params.id);
 
   // Fetch all attendance logs for this event
-  const { data: attendanceLogs } = await supabase
+  const { data: attendanceLogs, error: attendanceError } = await supabase
     .from("attendance")
-    .select("user_id, method, status, updated_at")
+    .select(`
+      user_id, 
+      method, 
+      status, 
+      updated_at,
+      profiles!attendance_user_id_fkey (
+        full_name,
+        reg_no,
+        role
+      )
+    `)
     .eq("event_id", params.id);
 
-  // Map attendance logs by user_id
-  const attendanceMap = new Map(attendanceLogs?.map((a) => [a.user_id, a]));
+  if (attendanceError) {
+    console.error("Error fetching attendance logs:", attendanceError);
+  }
+
+  // Combine registrations and attendance into a single list
+  const userMap = new Map();
+
+  registrations?.forEach((reg) => {
+    userMap.set(reg.user_id, {
+      userId: reg.user_id,
+      profile: reg.profiles,
+      att: null,
+      isRegistered: true,
+    });
+  });
+
+  attendanceLogs?.forEach((log) => {
+    if (userMap.has(log.user_id)) {
+      userMap.get(log.user_id).att = log;
+    } else {
+      userMap.set(log.user_id, {
+        userId: log.user_id,
+        profile: log.profiles, // from the attendance join
+        att: log,
+        isRegistered: false,
+      });
+    }
+  });
+
+  const allAttendees = Array.from(userMap.values());
 
   const handleApprove = async (formData: FormData) => {
     "use server";
@@ -103,17 +141,15 @@ export default async function EventAttendancePage({
               </tr>
             </thead>
             <tbody className="divide-y divide-border-gold/20 font-body text-sm text-ivory">
-              {registrations?.map((reg) => {
-                const profile = reg.profiles as any;
+              {allAttendees.map((attendee) => {
+                const { userId, profile, att } = attendee;
                 if (!profile) return null;
 
-                const att = attendanceMap.get(reg.user_id);
-
                 return (
-                  <tr key={reg.user_id} className="hover:bg-bg/40 transition-colors">
+                  <tr key={userId} className="hover:bg-bg/40 transition-colors">
                     <td className="py-4 font-semibold">{profile.full_name}</td>
                     <td className="py-4 text-muted font-mono">{profile.reg_no || "N/A"}</td>
-                    <td className="py-4 text-muted capitalize">{profile.role.replace("_", " ")}</td>
+                    <td className="py-4 text-muted capitalize">{profile.role?.replace("_", " ") || "Student"}</td>
                     <td className="py-4 text-muted font-mono text-xs">
                       {att ? (
                         att.method === "qr_self" ? "Self QR Scan" :
@@ -142,7 +178,7 @@ export default async function EventAttendancePage({
                       {att?.status === "pending" && (
                         <div className="flex justify-end items-center gap-2">
                           <form action={handleApprove}>
-                            <input type="hidden" name="userId" value={reg.user_id} />
+                            <input type="hidden" name="userId" value={userId} />
                             <button
                               type="submit"
                               className="p-2 text-green-400 hover:bg-green-400/10 rounded-lg transition-colors border border-green-500/20"
@@ -152,7 +188,7 @@ export default async function EventAttendancePage({
                             </button>
                           </form>
                           <form action={handleReject}>
-                            <input type="hidden" name="userId" value={reg.user_id} />
+                            <input type="hidden" name="userId" value={userId} />
                             <button
                               type="submit"
                               className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors border border-red-500/20"
@@ -167,10 +203,10 @@ export default async function EventAttendancePage({
                   </tr>
                 );
               })}
-              {(!registrations || registrations.length === 0) && (
+              {allAttendees.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-muted">
-                    No registrations found for this event.
+                    No registrations or check-ins found for this event.
                   </td>
                 </tr>
               )}

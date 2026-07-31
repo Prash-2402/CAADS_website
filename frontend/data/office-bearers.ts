@@ -60,7 +60,7 @@ export const OFFICE_BEARERS: Leader[] = [
     name: "Harshdeep Sharma",
     role: "Vice President",
     tier: 2,
-    photoUrl: null,
+    photoUrl: "/images/leaders/harshdeep.jpeg",
     signatureFont: "mr-de-haviland",
     signatureColor: SIGNATURE_COLORS["deep-bronze"],
   },

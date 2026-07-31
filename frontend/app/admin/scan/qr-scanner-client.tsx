@@ -42,10 +42,6 @@ export default function QrScannerClient({ events }: QrScannerClientProps) {
         { facingMode: "environment" },
         {
           fps: 10,
-          qrbox: (width, height) => {
-            const size = Math.min(width, height) * 0.7;
-            return { width: size, height: size };
-          },
         },
         async (decodedText) => {
           // Success callback
@@ -153,26 +149,46 @@ export default function QrScannerClient({ events }: QrScannerClientProps) {
           </div>
         )}
 
-        <div className="flex flex-col gap-3">
-          {!isScanning ? (
+          <div className="flex flex-col gap-3">
+            {!isScanning ? (
+              <button
+                onClick={startScanner}
+                disabled={!selectedEventId}
+                className="w-full py-3 px-4 rounded-xl bg-gold hover:bg-gold-bright text-bg font-semibold text-center transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Play size={18} />
+                Start Scanner
+              </button>
+            ) : (
+              <button
+                onClick={stopScanner}
+                className="w-full py-3 px-4 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 font-semibold text-center transition-colors text-sm flex items-center justify-center gap-2"
+              >
+                <Square size={18} />
+                Stop Scanner
+              </button>
+            )}
+
             <button
-              onClick={startScanner}
+              onClick={async () => {
+                const url = prompt("Enter the QR Code URL to simulate a scan:");
+                if (url) {
+                  const res = await processScan(selectedEventId, url);
+                  if (res.success) {
+                    setScanResult({ success: true, message: `Successfully checked in ${res.name}!` });
+                    playBeep(true);
+                  } else {
+                    setScanResult({ success: false, message: res.error || "Verification failed." });
+                    playBeep(false);
+                  }
+                }
+              }}
               disabled={!selectedEventId}
-              className="w-full py-3 px-4 rounded-xl bg-gold hover:bg-gold-bright text-bg font-semibold text-center transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-2 px-4 mt-2 rounded-xl border border-border-gold/50 text-gold hover:bg-gold/10 font-semibold text-center transition-colors text-sm disabled:opacity-50"
             >
-              <Play size={18} />
-              Start Scanner
+              Simulate Scan (Dev)
             </button>
-          ) : (
-            <button
-              onClick={stopScanner}
-              className="w-full py-3 px-4 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 font-semibold text-center transition-colors text-sm flex items-center justify-center gap-2"
-            >
-              <Square size={18} />
-              Stop Scanner
-            </button>
-          )}
-        </div>
+          </div>
       </div>
 
       {/* Camera & Feed Column */}
@@ -181,11 +197,11 @@ export default function QrScannerClient({ events }: QrScannerClientProps) {
         <div className="bg-bg-secondary border border-border-gold rounded-2xl overflow-hidden relative aspect-video flex flex-col items-center justify-center min-h-[300px]">
           <div
             id={scannerId}
-            className={`w-full h-full object-cover ${!isScanning ? "hidden" : "block"}`}
+            className="absolute inset-0 w-full h-full [&_video]:w-full [&_video]:h-full [&_video]:object-cover"
           />
 
           {!isScanning && (
-            <div className="absolute inset-0 bg-bg/90 flex flex-col items-center justify-center text-muted p-8 text-center space-y-4">
+            <div className="absolute inset-0 z-10 bg-bg/90 flex flex-col items-center justify-center text-muted p-8 text-center space-y-4">
               <div className="w-16 h-16 rounded-full bg-gold/10 border border-border-gold/30 flex items-center justify-center text-gold">
                 <Scan size={32} className="animate-pulse" />
               </div>

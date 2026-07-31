@@ -10,7 +10,9 @@ export default function MarketingLayout({
   return (
     <SmoothScrollProvider>
       <AntigravityCursor />
-      <PublicLayout>{children}</PublicLayout>
+      <div className="relative z-10">
+        <PublicLayout>{children}</PublicLayout>
+      </div>
     </SmoothScrollProvider>
   );
 }

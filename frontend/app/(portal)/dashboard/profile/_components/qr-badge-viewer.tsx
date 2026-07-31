@@ -31,8 +31,8 @@ export function QrBadgeViewer({
           width: 300,
           margin: 2,
           color: {
-            dark: '#C9A227', // gold
-            light: '#0A0A0A' // bg
+            dark: '#0A0A0A', // dark bg color
+            light: '#F2EDE4' // ivory
           }
         });
         setQrDataUrl(dataUrl);

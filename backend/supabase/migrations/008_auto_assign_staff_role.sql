@@ -24,7 +24,7 @@ BEGIN
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
     new.raw_user_meta_data->>'reg_no',
-    assigned_role,
+    assigned_role::user_role,
     is_staff_val
   )
   ON CONFLICT (id) DO UPDATE SET
