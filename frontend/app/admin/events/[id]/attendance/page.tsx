@@ -170,7 +170,7 @@ export default async function EventAttendancePage({
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-500/10 text-zinc-400 border border-zinc-500/20 text-xs font-semibold">
-                          not check-in
+                          Not Checked In
                         </span>
                       )}
                     </td>

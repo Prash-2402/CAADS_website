@@ -64,21 +64,37 @@ export async function buildEventMultiSheetExport(eventId: string): Promise<Buffe
     { header: "Checked At", key: "checkedAt", width: 25 },
   ];
 
-  const { data: attendance } = await supabase
+  // Two-step fetch to avoid PostgREST FK hint issues with the service-role client
+  const { data: attendanceRows, error: attError } = await supabase
     .from("attendance")
-    .select("method, status, updated_at, profiles!attendance_user_id_fkey(full_name, reg_no)")
+    .select("user_id, method, status, updated_at, created_at")
     .eq("event_id", eventId);
 
-  attendance?.forEach((a) => {
-    const prof = a.profiles as any;
-    attSheet.addRow({
-      name: prof?.full_name || "N/A",
-      regNo: prof?.reg_no || "N/A",
-      method: a.method,
-      status: a.status,
-      checkedAt: new Date(a.updated_at).toLocaleString(),
+  if (attError) {
+    console.error("[Excel Export] Attendance fetch error:", attError.message);
+  }
+
+  if (attendanceRows && attendanceRows.length > 0) {
+    const attUserIds = attendanceRows.map((a) => a.user_id);
+    const { data: attProfiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, reg_no")
+      .in("id", attUserIds);
+
+    const attProfileMap = new Map(attProfiles?.map((p) => [p.id, p]) ?? []);
+
+    attendanceRows.forEach((a) => {
+      const prof = attProfileMap.get(a.user_id);
+      const timestamp = a.updated_at || a.created_at;
+      attSheet.addRow({
+        name: prof?.full_name || "N/A",
+        regNo: prof?.reg_no || "N/A",
+        method: a.method,
+        status: a.status,
+        checkedAt: timestamp ? new Date(timestamp).toLocaleString() : "N/A",
+      });
     });
-  });
+  }
 
   attSheet.getRow(1).font = { bold: true };
 
@@ -92,21 +108,36 @@ export async function buildEventMultiSheetExport(eventId: string): Promise<Buffe
     { header: "Requested At", key: "createdAt", width: 25 },
   ];
 
-  const { data: yellowForms } = await supabase
+  // Two-step fetch for yellow forms as well for consistency
+  const { data: yfRows, error: yfError } = await supabase
     .from("yellow_forms")
-    .select("periods, status, created_at, profiles(full_name, reg_no)")
+    .select("user_id, periods, status, created_at")
     .eq("event_id", eventId);
 
-  yellowForms?.forEach((yf) => {
-    const prof = yf.profiles as any;
-    yfSheet.addRow({
-      name: prof?.full_name || "N/A",
-      regNo: prof?.reg_no || "N/A",
-      periods: yf.periods.join(", "),
-      status: yf.status,
-      createdAt: new Date(yf.created_at).toLocaleString(),
+  if (yfError) {
+    console.error("[Excel Export] Yellow forms fetch error:", yfError.message);
+  }
+
+  if (yfRows && yfRows.length > 0) {
+    const yfUserIds = yfRows.map((yf) => yf.user_id);
+    const { data: yfProfiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, reg_no")
+      .in("id", yfUserIds);
+
+    const yfProfileMap = new Map(yfProfiles?.map((p) => [p.id, p]) ?? []);
+
+    yfRows.forEach((yf) => {
+      const prof = yfProfileMap.get(yf.user_id);
+      yfSheet.addRow({
+        name: prof?.full_name || "N/A",
+        regNo: prof?.reg_no || "N/A",
+        periods: yf.periods.join(", "),
+        status: yf.status,
+        createdAt: yf.created_at ? new Date(yf.created_at).toLocaleString() : "N/A",
+      });
     });
-  });
+  }
 
   yfSheet.getRow(1).font = { bold: true };
 
@@ -134,34 +165,41 @@ export async function buildYellowFormsExport(): Promise<Buffer> {
     { header: "Requested At", key: "createdAt", width: 25 },
   ];
 
-  const { data: yellowForms } = await supabase
+  const { data: allYfRows } = await supabase
     .from("yellow_forms")
-    .select(`
-      periods,
-      status,
-      created_at,
-      profiles (
-        full_name,
-        reg_no
-      ),
-      events (
-        title
-      )
-    `)
+    .select("user_id, event_id, periods, status, created_at")
     .order("created_at", { ascending: false });
 
-  yellowForms?.forEach((yf) => {
-    const prof = yf.profiles as any;
-    const ev = yf.events as any;
-    sheet.addRow({
-      name: prof?.full_name || "N/A",
-      regNo: prof?.reg_no || "N/A",
-      eventTitle: ev?.title || "N/A",
-      periods: yf.periods.join(", "),
-      status: yf.status,
-      createdAt: new Date(yf.created_at).toLocaleString(),
+  if (allYfRows && allYfRows.length > 0) {
+    // Fetch all related profiles
+    const allUserIds = [...new Set(allYfRows.map((yf) => yf.user_id))];
+    const { data: allProfiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, reg_no")
+      .in("id", allUserIds);
+    const allProfileMap = new Map(allProfiles?.map((p) => [p.id, p]) ?? []);
+
+    // Fetch all related events
+    const allEventIds = [...new Set(allYfRows.map((yf) => yf.event_id))];
+    const { data: allEvents } = await supabase
+      .from("events")
+      .select("id, title")
+      .in("id", allEventIds);
+    const allEventMap = new Map(allEvents?.map((e) => [e.id, e]) ?? []);
+
+    allYfRows.forEach((yf) => {
+      const prof = allProfileMap.get(yf.user_id);
+      const ev = allEventMap.get(yf.event_id);
+      sheet.addRow({
+        name: prof?.full_name || "N/A",
+        regNo: prof?.reg_no || "N/A",
+        eventTitle: ev?.title || "N/A",
+        periods: yf.periods.join(", "),
+        status: yf.status,
+        createdAt: yf.created_at ? new Date(yf.created_at).toLocaleString() : "N/A",
+      });
     });
-  });
+  }
 
   sheet.getRow(1).font = { bold: true };
 
@@ -195,22 +233,35 @@ export async function buildMeetingAttendanceExport(meetingId: string): Promise<B
     { header: "Recorded At", key: "createdAt", width: 25 },
   ];
 
-  const { data: records } = await supabase
+  const { data: meetingRecords, error: meetingAttErr } = await supabase
     .from("meeting_attendance")
-    .select("method, status, created_at, profiles(full_name, reg_no)")
+    .select("user_id, method, status, created_at")
     .eq("meeting_id", meetingId)
     .order("created_at", { ascending: true });
 
-  records?.forEach((r) => {
-    const prof = r.profiles as any;
-    sheet.addRow({
-      name: prof?.full_name || "N/A",
-      regNo: prof?.reg_no || "N/A",
-      method: r.method,
-      status: r.status,
-      createdAt: new Date(r.created_at).toLocaleString(),
+  if (meetingAttErr) {
+    console.error("[Excel Export] Meeting attendance fetch error:", meetingAttErr.message);
+  }
+
+  if (meetingRecords && meetingRecords.length > 0) {
+    const meetingUserIds = meetingRecords.map((r) => r.user_id);
+    const { data: meetingProfiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, reg_no")
+      .in("id", meetingUserIds);
+    const meetingProfileMap = new Map(meetingProfiles?.map((p) => [p.id, p]) ?? []);
+
+    meetingRecords.forEach((r) => {
+      const prof = meetingProfileMap.get(r.user_id);
+      sheet.addRow({
+        name: prof?.full_name || "N/A",
+        regNo: prof?.reg_no || "N/A",
+        method: r.method,
+        status: r.status,
+        createdAt: r.created_at ? new Date(r.created_at).toLocaleString() : "N/A",
+      });
     });
-  });
+  }
 
   sheet.getRow(1).font = { bold: true };
 

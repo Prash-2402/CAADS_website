@@ -39,7 +39,7 @@ export default async function PortalLayout({
 
           <nav className="space-y-1">
             <div className="text-xs font-semibold text-muted uppercase tracking-wider mb-2 mt-6">
-              Student Space
+              My Portal
             </div>
             <Link 
               href="/dashboard"
@@ -69,6 +69,13 @@ export default async function PortalLayout({
                   My Assignments
                 </Link>
                 <Link 
+                  href="/dashboard/profile"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-ivory hover:bg-gold/10 hover:text-gold transition-colors font-body text-sm"
+                >
+                  <QrCode size={18} />
+                  My QR Badge
+                </Link>
+                <Link 
                   href="/volunteer/yellow-forms"
                   className="flex items-center gap-3 px-3 py-2 rounded-lg text-ivory hover:bg-gold/10 hover:text-gold transition-colors font-body text-sm"
                 >
@@ -88,7 +95,7 @@ export default async function PortalLayout({
                   className="flex items-center gap-3 px-3 py-2 rounded-lg text-gold hover:bg-gold/10 transition-colors font-body text-sm font-semibold"
                 >
                   <Shield size={18} />
-                  Admin Panel
+                  Leader Panel
                 </Link>
               </>
             )}
