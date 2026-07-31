@@ -90,12 +90,19 @@ function SubmitButton() {
 export function LoginForm() {
   const [state, formAction] = useFormState(loginAction, initialState);
   const [email, setEmail] = useState("");
+  const [usn, setUsn] = useState("");
   const [password, setPassword] = useState("");
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
 
   const handleSelectAccount = (acc: SampleAccount) => {
     setEmail(acc.email);
     setPassword(acc.password);
+    // Auto-fill USN for sample accounts to test easily
+    if (acc.role === "Admin") setUsn("1111111");
+    else if (acc.role === "Core Team") setUsn("2402001");
+    else if (acc.role === "Volunteer Lead") setUsn("2402002");
+    else if (acc.role === "Volunteer") setUsn("2402003");
+    else setUsn("2402000"); // default student
     setSelectedAccount(acc.email);
   };
 
@@ -143,6 +150,36 @@ export function LoginForm() {
           {state.fieldErrors?.email && (
             <p className="text-xs text-red-400 font-body">
               {state.fieldErrors.email[0]}
+            </p>
+          )}
+        </div>
+
+        {/* USN */}
+        <div className="space-y-1.5">
+          <label
+            htmlFor="login-usn"
+            className="block font-body text-sm font-medium text-ivory"
+          >
+            Register Number / USN
+          </label>
+          <input
+            id="login-usn"
+            name="usn"
+            type="text"
+            value={usn}
+            onChange={(e) => setUsn(e.target.value)}
+            required
+            placeholder="e.g. 2402001"
+            className="
+              w-full rounded-xl border border-border-gold bg-bg px-4 py-2.5
+              font-body text-sm text-ivory placeholder:text-muted
+              focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold
+              transition-colors duration-150
+            "
+          />
+          {state.fieldErrors?.usn && (
+            <p className="text-xs text-red-400 font-body">
+              {state.fieldErrors.usn[0]}
             </p>
           )}
         </div>

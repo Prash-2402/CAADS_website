@@ -1,5 +1,6 @@
 import { PublicLayout } from "@/components/layout/public-layout";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
+import AntigravityCursor from "@/components/ui/antigravity-cursor";
 
 export default function MarketingLayout({
   children,
@@ -8,6 +9,7 @@ export default function MarketingLayout({
 }) {
   return (
     <SmoothScrollProvider>
+      <AntigravityCursor />
       <PublicLayout>{children}</PublicLayout>
     </SmoothScrollProvider>
   );

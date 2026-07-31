@@ -5,8 +5,12 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { isAllowedEmail } from "@/lib/supabase/auth";
 
+import { STAFF_SECRETS } from "@/lib/staff-usns";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
 const LoginSchema = z.object({
   email: z.string().email("Enter a valid email address."),
+  usn: z.string().min(5, "Register Number / USN is required."),
   password: z.string().min(1, "Password is required."),
 });
 
@@ -14,6 +18,7 @@ export type LoginState = {
   error?: string;
   fieldErrors?: {
     email?: string[];
+    usn?: string[];
     password?: string[];
   };
 };
@@ -25,6 +30,7 @@ export async function loginAction(
   try {
     const raw = {
       email: formData.get("email"),
+      usn: formData.get("usn"),
       password: formData.get("password"),
     };
 
@@ -34,10 +40,52 @@ export async function loginAction(
       return { fieldErrors: parsed.error.flatten().fieldErrors };
     }
 
-    const { email, password } = parsed.data;
+    const { email, usn, password } = parsed.data;
+
+    // Enforce Christ Email domain
+    if (!isAllowedEmail(email)) {
+      return {
+        fieldErrors: {
+          email: ["Only Christ University email addresses are allowed."],
+        },
+      };
+    }
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    let { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    // Handle First-Time Staff Activation (if login fails)
+    if (error && error.message.toLowerCase().includes("invalid login credentials")) {
+      const isCoreTeam = STAFF_SECRETS.coreTeamUSNs.includes(usn);
+      const isVolunteer = STAFF_SECRETS.volunteerUSNs.includes(usn);
+      
+      if ((isCoreTeam || isVolunteer) && password === STAFF_SECRETS.initialPassword) {
+        // Create user via Admin API to bypass email confirmation
+        const supabaseAdmin = createSupabaseClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
+        const { error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: {
+            reg_no: usn,
+            assigned_role: isCoreTeam ? "core_team" : "volunteer"
+          }
+        });
+
+        if (createError) {
+          return { error: createError.message || "Failed to activate staff account." };
+        }
+
+        // Now log them in normally
+        const loginAttempt = await supabase.auth.signInWithPassword({ email, password });
+        authData = loginAttempt.data;
+        error = loginAttempt.error;
+      }
+    }
 
     if (error) {
       const rawMsg = typeof error === "string" ? error : error?.message || "Invalid email or password.";
@@ -46,6 +94,21 @@ export async function loginAction(
       }
       return { error: String(rawMsg) };
     }
+
+    // Verify USN matches the registered account for extra security
+    if (authData?.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("reg_no")
+        .eq("id", authData.user.id)
+        .single();
+      
+      if (profile && profile.reg_no !== usn) {
+        await supabase.auth.signOut();
+        return { error: "The provided USN does not match the registered account for this email." };
+      }
+    }
+
   } catch (err: any) {
     // Re-throw Next.js redirect exception so navigation occurs seamlessly
     if (err?.message === "NEXT_REDIRECT" || err?.digest?.startsWith("NEXT_REDIRECT")) {
