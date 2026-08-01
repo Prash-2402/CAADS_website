@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { updateAssignmentStatusAction } from "../../../actions";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { updateAssignmentStatusAction, releaseVolunteerAssignmentAction } from "../../../actions";
+import { CheckCircle2, XCircle, LogOut } from "lucide-react";
 
 export function AssignmentActions({ 
   eventId, 
@@ -18,6 +18,19 @@ export function AssignmentActions({
     setIsPending(true);
     setError(null);
     const result = await updateAssignmentStatusAction(eventId, status);
+    if (result.error) {
+      setError(result.error);
+    }
+    setIsPending(false);
+  }
+
+  async function handleRelease() {
+    if (!confirm("Are you sure you want to complete and release your volunteer duty for this event?")) {
+      return;
+    }
+    setIsPending(true);
+    setError(null);
+    const result = await releaseVolunteerAssignmentAction(eventId);
     if (result.error) {
       setError(result.error);
     }
@@ -53,17 +66,35 @@ export function AssignmentActions({
           </button>
         </div>
       ) : (
-        <div className="bg-bg p-4 rounded-xl border border-border-gold/30">
-          <p className="font-body text-sm text-muted mb-3">
-            You have <strong className={currentStatus === "accepted" ? "text-green-400" : "text-red-400"}>{currentStatus}</strong> this assignment.
-          </p>
-          <button
-            onClick={() => handleAction(currentStatus === "accepted" ? "declined" : "accepted")}
-            disabled={isPending}
-            className="text-xs font-semibold text-ivory/70 hover:text-gold transition-colors underline underline-offset-4"
-          >
-            Change my response to {currentStatus === "accepted" ? "Decline" : "Accept"}
-          </button>
+        <div className="bg-bg p-5 rounded-xl border border-border-gold/30 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p className="font-body text-sm text-muted">
+                Status: <strong className={currentStatus === "accepted" ? "text-green-400" : "text-red-400"}>{currentStatus.toUpperCase()}</strong>
+              </p>
+            </div>
+            
+            {currentStatus === "accepted" && (
+              <button
+                onClick={handleRelease}
+                disabled={isPending}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold/10 text-gold border border-gold/40 hover:bg-gold hover:text-bg transition-all text-xs font-bold uppercase tracking-wider disabled:opacity-50"
+              >
+                <LogOut size={14} />
+                {isPending ? "Releasing..." : "Free / Complete Duty (Work Done)"}
+              </button>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-border-gold/20">
+            <button
+              onClick={() => handleAction(currentStatus === "accepted" ? "declined" : "accepted")}
+              disabled={isPending}
+              className="text-xs font-semibold text-ivory/70 hover:text-gold transition-colors underline underline-offset-4"
+            >
+              Change my response to {currentStatus === "accepted" ? "Decline" : "Accept"}
+            </button>
+          </div>
         </div>
       )}
     </div>

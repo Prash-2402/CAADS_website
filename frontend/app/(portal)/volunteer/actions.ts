@@ -30,3 +30,27 @@ export async function updateAssignmentStatusAction(
   revalidatePath(`/volunteer/events/${eventId}`);
   return { success: true };
 }
+
+export async function releaseVolunteerAssignmentAction(eventId: string) {
+  const profile = await getProfile();
+
+  if (!profile || !["volunteer", "core_team", "admin"].includes(profile.role)) {
+    return { error: "Unauthorized" };
+  }
+
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("volunteer_assignments")
+    .delete()
+    .eq("event_id", eventId)
+    .eq("user_id", profile.id);
+
+  if (error) {
+    return { error: "Failed to release volunteer duty." };
+  }
+
+  revalidatePath("/volunteer");
+  revalidatePath(`/volunteer/events/${eventId}`);
+  return { success: true };
+}

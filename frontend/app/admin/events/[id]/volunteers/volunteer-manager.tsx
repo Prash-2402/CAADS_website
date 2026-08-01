@@ -152,10 +152,11 @@ export default function VolunteerManager({
                   <button
                     onClick={() => handleRemove(assign.user_id, assign.profiles?.full_name)}
                     disabled={isPending}
-                    className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors disabled:opacity-50"
-                    title="Remove Assignment"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-400 border border-red-500/20 hover:bg-red-400/10 rounded-lg transition-colors disabled:opacity-50"
+                    title="Release / Free Volunteer"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={14} />
+                    Free / Release
                   </button>
                 </div>
               </div>
