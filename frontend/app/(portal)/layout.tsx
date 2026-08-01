@@ -18,7 +18,7 @@ export default async function PortalLayout({
     redirect("/login");
   }
 
-  const isVolunteer = profile.role === "volunteer";
+  const isVolunteer = ["volunteer", "core_team", "admin"].includes(profile.role);
   const isLeader = ["core_team", "admin"].includes(profile.role);
   
   return (

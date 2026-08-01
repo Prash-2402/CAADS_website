@@ -13,7 +13,8 @@ import {
   Shield,
   Star,
   Mail,
-  LogOut
+  LogOut,
+  ArrowLeft
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +53,14 @@ export default async function AdminLayout({
 
             {/* Navigation links */}
             <nav className="space-y-1">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 px-3 py-2 mb-4 rounded-lg bg-gold/10 text-gold hover:bg-gold hover:text-bg transition-all font-body text-xs font-semibold"
+              >
+                <ArrowLeft size={16} />
+                Back to Student/Volunteer Portal
+              </Link>
+
               <div className="text-xs font-semibold text-muted uppercase tracking-wider mb-2 mt-6">
                 Leader Space
               </div>
