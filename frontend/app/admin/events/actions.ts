@@ -252,3 +252,32 @@ export async function removeVolunteerAssignment(eventId: string, userId: string)
   }
 }
 
+export async function completeVolunteerAssignment(eventId: string, userId: string) {
+  try {
+    await checkLeader();
+    const supabase = createClient();
+
+    const { error: updateErr } = await supabase
+      .from("volunteer_assignments")
+      .update({ status: "completed" as any })
+      .eq("event_id", eventId)
+      .eq("user_id", userId);
+
+    if (updateErr) {
+      const { error: deleteErr } = await supabase
+        .from("volunteer_assignments")
+        .delete()
+        .eq("event_id", eventId)
+        .eq("user_id", userId);
+
+      if (deleteErr) return { success: false, error: deleteErr.message };
+    }
+
+    revalidatePath(`/admin/events/${eventId}/volunteers`);
+    revalidatePath("/volunteer");
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+

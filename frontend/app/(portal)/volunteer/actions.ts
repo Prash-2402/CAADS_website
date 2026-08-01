@@ -40,17 +40,26 @@ export async function releaseVolunteerAssignmentAction(eventId: string) {
 
   const supabase = createClient();
 
-  const { error } = await supabase
+  const { error: updateErr } = await supabase
     .from("volunteer_assignments")
-    .delete()
+    .update({ status: "completed" as any })
     .eq("event_id", eventId)
     .eq("user_id", profile.id);
 
-  if (error) {
-    return { error: "Failed to release volunteer duty." };
+  if (updateErr) {
+    const { error: deleteErr } = await supabase
+      .from("volunteer_assignments")
+      .delete()
+      .eq("event_id", eventId)
+      .eq("user_id", profile.id);
+
+    if (deleteErr) {
+      return { error: deleteErr.message || "Failed to release volunteer duty." };
+    }
   }
 
   revalidatePath("/volunteer");
   revalidatePath(`/volunteer/events/${eventId}`);
+  revalidatePath(`/admin/events/${eventId}/volunteers`);
   return { success: true };
 }

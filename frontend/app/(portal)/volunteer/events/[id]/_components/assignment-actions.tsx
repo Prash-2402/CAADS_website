@@ -9,7 +9,7 @@ export function AssignmentActions({
   currentStatus 
 }: { 
   eventId: string; 
-  currentStatus: "invited" | "accepted" | "declined" 
+  currentStatus: "invited" | "accepted" | "declined" | "completed"
 }) {
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +35,20 @@ export function AssignmentActions({
       setError(result.error);
     }
     setIsPending(false);
+  }
+
+  if (currentStatus === "completed") {
+    return (
+      <div className="bg-gold/10 border border-gold/40 p-5 rounded-xl space-y-2">
+        <div className="flex items-center gap-2 text-gold font-display font-bold text-base">
+          <CheckCircle2 size={20} />
+          Duty Completed & Released
+        </div>
+        <p className="font-body text-xs text-muted">
+          Your volunteer duty for this event has been marked as completed. Thank you for your service!
+        </p>
+      </div>
+    );
   }
 
   return (

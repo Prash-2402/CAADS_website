@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { inviteVolunteer, removeVolunteerAssignment } from "../../actions";
-import { Search, UserPlus, Trash2, Mail, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
+import { inviteVolunteer, removeVolunteerAssignment, completeVolunteerAssignment } from "../../actions";
+import { Search, UserPlus, Trash2, Mail, CheckCircle2, Clock, XCircle, AlertCircle, Award } from "lucide-react";
 
 type VolunteerManagerProps = {
   eventId: string;
@@ -80,10 +80,27 @@ export default function VolunteerManager({
     startTransition(async () => {
       const res = await removeVolunteerAssignment(eventId, userId);
       if (res.success) {
-        setSuccess("Volunteer removed successfully!");
+        setSuccess("Volunteer assignment removed/released!");
         setDraftEmail(null);
       } else {
         setError(res.error || "Failed to remove volunteer");
+      }
+    });
+  };
+
+  const handleComplete = (userId: string, name: string) => {
+    if (!confirm(`Mark duty as COMPLETED for ${name}? This will free the volunteer.`)) {
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    startTransition(async () => {
+      const res = await completeVolunteerAssignment(eventId, userId);
+      if (res.success) {
+        setSuccess(`Duty marked as completed for ${name}!`);
+      } else {
+        setError(res.error || "Failed to complete volunteer assignment");
       }
     });
   };
@@ -133,9 +150,13 @@ export default function VolunteerManager({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3">
                   {/* Status Badge */}
-                  {assign.status === "accepted" ? (
+                  {assign.status === "completed" ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/20 text-gold border border-gold/40 text-xs font-bold uppercase tracking-wider">
+                      <Award size={14} /> Completed
+                    </span>
+                  ) : assign.status === "accepted" ? (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-semibold">
                       <CheckCircle2 size={14} /> Accepted
                     </span>
@@ -149,14 +170,26 @@ export default function VolunteerManager({
                     </span>
                   )}
 
+                  {assign.status !== "completed" && (
+                    <button
+                      onClick={() => handleComplete(assign.user_id, assign.profiles?.full_name)}
+                      disabled={isPending}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gold border border-gold/40 bg-gold/10 hover:bg-gold hover:text-bg rounded-lg transition-all disabled:opacity-50"
+                      title="Mark duty as Completed & Free volunteer"
+                    >
+                      <CheckCircle2 size={14} />
+                      Mark Completed
+                    </button>
+                  )}
+
                   <button
                     onClick={() => handleRemove(assign.user_id, assign.profiles?.full_name)}
                     disabled={isPending}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-400 border border-red-500/20 hover:bg-red-400/10 rounded-lg transition-colors disabled:opacity-50"
-                    title="Release / Free Volunteer"
+                    title="Release / Remove Volunteer Assignment"
                   >
                     <Trash2 size={14} />
-                    Free / Release
+                    Remove
                   </button>
                 </div>
               </div>

@@ -42,7 +42,7 @@ export type EventRegistration = {
   registered_at: string;
 };
 
-export type VolunteerStatus = "invited" | "accepted" | "declined";
+export type VolunteerStatus = "invited" | "accepted" | "declined" | "completed";
 
 export type VolunteerAssignment = {
   id: string;
