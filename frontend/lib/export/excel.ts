@@ -188,7 +188,7 @@ export async function buildYellowFormsExport(): Promise<Buffer> {
 
   if (allYfRows && allYfRows.length > 0) {
     // Fetch all related profiles
-    const allUserIds = [...new Set(allYfRows.map((yf) => yf.user_id))];
+    const allUserIds = Array.from(new Set(allYfRows.map((yf) => yf.user_id)));
     const { data: allProfiles } = await supabase
       .from("profiles")
       .select("id, full_name, reg_no")
@@ -196,7 +196,7 @@ export async function buildYellowFormsExport(): Promise<Buffer> {
     const allProfileMap = new Map(allProfiles?.map((p) => [p.id, p]) ?? []);
 
     // Fetch all related events
-    const allEventIds = [...new Set(allYfRows.map((yf) => yf.event_id))];
+    const allEventIds = Array.from(new Set(allYfRows.map((yf) => yf.event_id)));
     const { data: allEvents } = await supabase
       .from("events")
       .select("id, title")

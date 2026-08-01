@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getRole } from "@/lib/supabase/auth";
+import { getRole, getProfile } from "@/lib/supabase/auth";
 import { revalidatePath } from "next/cache";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
@@ -9,6 +9,17 @@ async function checkLeader() {
   const role = await getRole();
   if (role !== "core_team" && role !== "admin") {
     throw new Error("Unauthorized: Leader access required");
+  }
+}
+
+async function checkStaffOrLeader() {
+  const profile = await getProfile();
+  if (!profile) {
+    throw new Error("Unauthorized: Authentication required");
+  }
+  const isAuthorized = profile.is_staff || ["volunteer", "core_team", "admin"].includes(profile.role);
+  if (!isAuthorized) {
+    throw new Error("Unauthorized: Staff or Leader access required");
   }
 }
 
@@ -20,7 +31,7 @@ async function checkLeader() {
  */
 export async function processScan(eventId: string, qrContent: string) {
   try {
-    await checkLeader();
+    await checkStaffOrLeader();
     const supabase = createClient();
     const {
       data: { user: leader },
