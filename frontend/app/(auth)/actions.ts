@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { isAllowedEmail } from "@/lib/supabase/auth";
@@ -86,6 +87,7 @@ export async function loginAction(
     return { error: err?.message || String(err) || "An error occurred while communicating with the authentication server." };
   }
 
+  revalidatePath("/", "layout");
   redirect("/dashboard");
 }
 
@@ -177,5 +179,6 @@ export async function signupAction(
 export async function signOutAction() {
   const supabase = createClient();
   await supabase.auth.signOut();
+  revalidatePath("/", "layout");
   redirect("/login");
 }

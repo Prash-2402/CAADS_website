@@ -4,6 +4,9 @@ import Link from "next/link";
 import { LayoutDashboard, CalendarDays, ClipboardCheck, QrCode, LogOut, FileText, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function PortalLayout({
   children,
 }: {
