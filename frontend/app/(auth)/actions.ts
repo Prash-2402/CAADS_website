@@ -52,6 +52,8 @@ export async function loginAction(
     }
 
     const supabase = createClient();
+    // Ensure any previous session cookie is cleared before signing in
+    await supabase.auth.signOut();
     let { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
 
 
