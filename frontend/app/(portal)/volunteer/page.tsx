@@ -69,7 +69,11 @@ export default async function VolunteerPortalPage() {
                     <h3 className="font-display font-semibold text-ivory text-lg truncate max-w-sm">
                       {event.title}
                     </h3>
-                    {assignment.status === 'accepted' ? (
+                    {assignment.status === 'completed' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gold/10 text-gold border border-gold/30 text-[10px] uppercase font-bold tracking-wider">
+                        Completed
+                      </span>
+                    ) : assignment.status === 'accepted' ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-[10px] uppercase font-bold tracking-wider">
                         Accepted
                       </span>

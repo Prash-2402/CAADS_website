@@ -1,49 +1,43 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LoginForm } from "./login-form";
+import { LoginForm } from "../login-form";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Student Sign In",
-  description: "Sign in to the CAADS student portal.",
+  title: "Volunteer Sign In",
+  description: "Sign in to the CAADS volunteer portal.",
 };
 
-export default async function LoginPage() {
-  // Always clear any existing session when the login page is loaded.
-  // This prevents a previous role's cookie from silently resuming.
+export default async function VolunteerLoginPage() {
+  // Always clear any existing session when any login page is loaded.
+  // Prevents a student/leader cookie from silently surviving into this portal.
   const supabase = createClient();
   await supabase.auth.signOut();
 
   return (
     <div className="space-y-6">
       <div>
+        <div className="inline-flex items-center gap-2 rounded-full bg-gold/10 border border-gold/30 px-3 py-1 mb-3">
+          <span className="text-xs font-body font-semibold text-gold uppercase tracking-wider">
+            Volunteer Portal
+          </span>
+        </div>
         <h1 className="font-display text-2xl font-bold text-ivory">
-          Student Sign In
+          Volunteer Sign In
         </h1>
         <p className="mt-1 font-body text-sm text-muted">
-          Use your Christ University email to continue.
+          For assigned volunteers, core team, and admins.
         </p>
       </div>
 
-      <LoginForm portal="student" />
-
-      <p className="text-center font-body text-sm text-muted">
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/signup"
-          className="text-gold hover:text-gold-bright transition-colors duration-150"
-        >
-          Sign up
-        </Link>
-      </p>
+      <LoginForm portal="volunteer" />
 
       <p className="text-center font-body text-xs text-muted">
-        Volunteer?{" "}
         <Link
-          href="/login/volunteer"
+          href="/login"
           className="text-gold hover:text-gold-bright transition-colors duration-150"
         >
-          Volunteer sign in
+          Student sign in
         </Link>
         {" · "}
         <Link

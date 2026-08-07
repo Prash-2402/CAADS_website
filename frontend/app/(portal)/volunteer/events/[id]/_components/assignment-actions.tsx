@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { updateAssignmentStatusAction, releaseVolunteerAssignmentAction } from "../../../actions";
 import { CheckCircle2, XCircle, LogOut } from "lucide-react";
 
@@ -11,6 +12,7 @@ export function AssignmentActions({
   eventId: string; 
   currentStatus: "invited" | "accepted" | "declined" | "completed"
 }) {
+  const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,6 +22,8 @@ export function AssignmentActions({
     const result = await updateAssignmentStatusAction(eventId, status);
     if (result.error) {
       setError(result.error);
+    } else {
+      router.refresh(); // re-render page so currentStatus prop updates
     }
     setIsPending(false);
   }
@@ -33,6 +37,8 @@ export function AssignmentActions({
     const result = await releaseVolunteerAssignmentAction(eventId);
     if (result.error) {
       setError(result.error);
+    } else {
+      router.refresh(); // re-render page so "Duty Completed" banner appears
     }
     setIsPending(false);
   }
@@ -42,7 +48,7 @@ export function AssignmentActions({
       <div className="bg-gold/10 border border-gold/40 p-5 rounded-xl space-y-2">
         <div className="flex items-center gap-2 text-gold font-display font-bold text-base">
           <CheckCircle2 size={20} />
-          Duty Completed & Released
+          Duty Completed &amp; Released
         </div>
         <p className="font-body text-xs text-muted">
           Your volunteer duty for this event has been marked as completed. Thank you for your service!
@@ -114,3 +120,4 @@ export function AssignmentActions({
     </div>
   );
 }
+

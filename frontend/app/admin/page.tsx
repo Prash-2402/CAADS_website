@@ -30,25 +30,29 @@ export default async function AdminPage() {
       name: "Total Events",
       value: eventsCount || 0,
       icon: Calendar,
-      color: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+      iconClass: "text-blue-400 bg-blue-500/10",
+      borderClass: "border-blue-500/20",
     },
     {
       name: "Event Registrations",
       value: regsCount || 0,
       icon: ClipboardList,
-      color: "text-green-400 bg-green-500/10 border-green-500/20",
+      iconClass: "text-green-400 bg-green-500/10",
+      borderClass: "border-green-500/20",
     },
     {
       name: "Pending Yellow Forms",
       value: pendingYfCount || 0,
       icon: FileText,
-      color: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+      iconClass: "text-yellow-400 bg-yellow-500/10",
+      borderClass: "border-yellow-500/20",
     },
     {
       name: "Active Staff & Volunteers",
       value: volunteersCount || 0,
       icon: Users,
-      color: "text-gold bg-gold/10 border-border-gold/30",
+      iconClass: "text-gold bg-gold/10",
+      borderClass: "border-border-gold/30",
     },
   ];
 
@@ -64,13 +68,13 @@ export default async function AdminPage() {
         {stats.map((stat) => (
           <div
             key={stat.name}
-            className={`p-6 rounded-2xl border bg-bg-secondary flex items-center justify-between shadow-sm hover:border-gold/50 transition-colors duration-200 ${stat.color.split(" ").slice(2).join(" ")}`}
+            className={`p-6 rounded-2xl border bg-bg-secondary flex items-center justify-between shadow-sm hover:border-gold/50 transition-colors duration-200 ${stat.borderClass}`}
           >
             <div>
               <p className="font-body text-sm text-muted">{stat.name}</p>
               <h3 className="font-display text-2xl font-bold text-ivory mt-2">{stat.value}</h3>
             </div>
-            <div className={`p-3 rounded-xl border ${stat.color.split(" ").slice(0, 2).join(" ")}`}>
+            <div className={`p-3 rounded-xl border ${stat.iconClass} ${stat.borderClass}`}>
               <stat.icon size={22} />
             </div>
           </div>

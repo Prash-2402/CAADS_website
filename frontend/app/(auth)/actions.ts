@@ -6,12 +6,25 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { isAllowedEmail } from "@/lib/supabase/auth";
 
+// Portals and the DB roles that are allowed to use them
+const PORTAL_ROLES: Record<string, string[]> = {
+  student: ["student", "volunteer", "core_team", "admin"],
+  volunteer: ["volunteer", "core_team", "admin"],
+  leader: ["core_team", "admin"],
+};
 
+// Where each portal redirects after a successful login
+const PORTAL_REDIRECT: Record<string, string> = {
+  student: "/dashboard",
+  volunteer: "/volunteer",
+  leader: "/admin",
+};
 
 const LoginSchema = z.object({
   email: z.string().email("Enter a valid email address."),
   usn: z.string().min(5, "Register Number / USN is required."),
   password: z.string().min(1, "Password is required."),
+  portal: z.enum(["student", "volunteer", "leader"]).default("student"),
 });
 
 export type LoginState = {
@@ -27,11 +40,14 @@ export async function loginAction(
   _prevState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
+  let redirectTo = "/dashboard";
+
   try {
     const raw = {
       email: formData.get("email"),
       usn: formData.get("usn"),
       password: formData.get("password"),
+      portal: formData.get("portal") ?? "student",
     };
 
     // Server-side validation
@@ -40,7 +56,8 @@ export async function loginAction(
       return { fieldErrors: parsed.error.flatten().fieldErrors };
     }
 
-    const { email, usn, password } = parsed.data;
+    const { email, usn, password, portal } = parsed.data;
+    redirectTo = PORTAL_REDIRECT[portal] ?? "/dashboard";
 
     // Enforce Christ Email domain
     if (!isAllowedEmail(email)) {
@@ -52,45 +69,80 @@ export async function loginAction(
     }
 
     const supabase = createClient();
-    // Ensure any previous session cookie is cleared before signing in
+
+    // Always sign out any previous session first — this is the core fix.
+    // Without this, a cached volunteer session cookie would survive into the
+    // leader portal even after the user submits fresh leader credentials.
     await supabase.auth.signOut();
-    let { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
 
-
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
-      const rawMsg = typeof error === "string" ? error : error?.message || "Invalid email or password.";
+      const rawMsg =
+        typeof error === "string"
+          ? error
+          : error?.message || "Invalid email or password.";
       if (rawMsg.toLowerCase().includes("email not confirmed")) {
-        return { error: "Email not confirmed. Please check your inbox for the confirmation link." };
+        return {
+          error:
+            "Email not confirmed. Please check your inbox for the confirmation link.",
+        };
       }
       return { error: String(rawMsg) };
     }
 
-    // Verify USN matches the registered account for extra security
     if (authData?.user) {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("reg_no")
+        .select("reg_no, role")
         .eq("id", authData.user.id)
         .single();
-      
+
+      // Verify USN matches
       if (profile && profile.reg_no !== usn) {
         await supabase.auth.signOut();
-        return { error: "The provided USN does not match the registered account for this email." };
+        return {
+          error:
+            "The provided USN does not match the registered account for this email.",
+        };
+      }
+
+      // Verify the user's role is allowed on the requested portal.
+      // If not, sign them out immediately so no session cookie persists.
+      const allowedRoles = PORTAL_ROLES[portal] ?? [];
+      if (profile && !allowedRoles.includes(profile.role)) {
+        await supabase.auth.signOut();
+        const portalLabel =
+          portal === "leader"
+            ? "leader (core team / admin)"
+            : portal;
+        return {
+          error: `Your account does not have ${portalLabel} access. Please use the correct login portal for your role.`,
+        };
       }
     }
-
   } catch (err: any) {
-    // Re-throw Next.js redirect exception so navigation occurs seamlessly
-    if (err?.message === "NEXT_REDIRECT" || err?.digest?.startsWith("NEXT_REDIRECT")) {
+    // Re-throw Next.js redirect so navigation occurs seamlessly
+    if (
+      err?.message === "NEXT_REDIRECT" ||
+      err?.digest?.startsWith("NEXT_REDIRECT")
+    ) {
       throw err;
     }
     console.error("Auth login exception:", err);
-    return { error: err?.message || String(err) || "An error occurred while communicating with the authentication server." };
+    return {
+      error:
+        err?.message ||
+        String(err) ||
+        "An error occurred while communicating with the authentication server.",
+    };
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect(redirectTo);
 }
 
 const SignupSchema = z.object({

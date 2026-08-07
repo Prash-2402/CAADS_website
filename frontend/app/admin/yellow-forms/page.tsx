@@ -29,16 +29,16 @@ export default async function YellowFormsHubPage() {
     `)
     .order("created_at", { ascending: false });
 
-  const handleApprove = async (formData: FormData) => {
+  const doApprove = async (formData: FormData) => {
     "use server";
     const id = formData.get("id") as string;
-    await approveYellowForm(id);
+    if (id) await approveYellowForm(id);
   };
 
-  const handleReject = async (formData: FormData) => {
+  const doReject = async (formData: FormData) => {
     "use server";
     const id = formData.get("id") as string;
-    await rejectYellowForm(id);
+    if (id) await rejectYellowForm(id);
   };
 
   return (
@@ -109,7 +109,7 @@ export default async function YellowFormsHubPage() {
                     <td className="py-4 text-right">
                       {yf.status === "pending" && (
                         <div className="flex justify-end items-center gap-2">
-                          <form action={handleApprove}>
+                          <form action={doApprove}>
                             <input type="hidden" name="id" value={yf.id} />
                             <button
                               type="submit"
@@ -119,7 +119,7 @@ export default async function YellowFormsHubPage() {
                               <Check size={16} />
                             </button>
                           </form>
-                          <form action={handleReject}>
+                          <form action={doReject}>
                             <input type="hidden" name="id" value={yf.id} />
                             <button
                               type="submit"

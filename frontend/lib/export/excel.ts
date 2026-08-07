@@ -1,7 +1,4 @@
 import ExcelJS from "exceljs";
-import { createClient } from "@/lib/supabase/server";
-
-// We use service role to fetch all registration & attendance data for export to bypass RLS limits on leaders
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 function getServiceRoleSupabase() {
@@ -11,151 +8,168 @@ function getServiceRoleSupabase() {
 }
 
 /**
- * Builds a multi-sheet Excel workbook for a specific event containing:
- * - Registrations (Sheet 1)
- * - Attendance logs (Sheet 2)
- * - Yellow forms (Sheet 3)
+ * Builds an Excel workbook for an event with Attendance as the FIRST (primary) sheet.
+ * Merges registrations and attendance logs so no attendee is missed.
  */
 export async function buildEventMultiSheetExport(eventId: string): Promise<Buffer> {
   const supabase = getServiceRoleSupabase();
 
-  // Verify service role client works
-  const { data: event, error: eventError } = await supabase
+  const { data: event } = await supabase
     .from("events")
-    .select("title")
+    .select("title, date")
     .eq("id", eventId)
     .single();
 
-  if (eventError) {
-    console.error("[Excel] Failed to fetch event:", eventError.message);
-  }
   const eventTitle = event?.title || "Event";
-  console.log("[Excel] Building export for event:", eventTitle, "id:", eventId);
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "CAADS Platform";
   workbook.created = new Date();
 
-  // ── 1. Sheet: Registrations ──────────────────────────────────────────────
-  const regSheet = workbook.addWorksheet("Registrations");
-  regSheet.columns = [
-    { header: "Full Name", key: "name", width: 30 },
-    { header: "Registration No", key: "regNo", width: 20 },
-    { header: "Role", key: "role", width: 15 },
-    { header: "Registered At", key: "registeredAt", width: 25 },
-  ];
-
-  const { data: regRows, error: regError } = await supabase
+  // Fetch registrations
+  const { data: regRows } = await supabase
     .from("event_registrations")
     .select("user_id, registered_at")
     .eq("event_id", eventId);
 
-  console.log("[Excel] Registrations fetched:", regRows?.length ?? 0, "error:", regError?.message);
+  // Fetch attendance records
+  const { data: attRows } = await supabase
+    .from("attendance")
+    .select("user_id, method, status, check_in_time, periods_present, updated_at, created_at")
+    .eq("event_id", eventId);
 
-  if (regRows && regRows.length > 0) {
-    const regUserIds = regRows.map((r) => r.user_id);
-    const { data: regProfiles, error: regProfileErr } = await supabase
-      .from("profiles")
-      .select("id, full_name, reg_no, role")
-      .in("id", regUserIds);
+  // Collect all unique user IDs
+  const allUserIds = Array.from(
+    new Set([
+      ...(regRows ?? []).map((r) => r.user_id),
+      ...(attRows ?? []).map((a) => a.user_id),
+    ])
+  );
 
-    console.log("[Excel] Reg profiles fetched:", regProfiles?.length ?? 0, "error:", regProfileErr?.message);
-    const regProfileMap = new Map(regProfiles?.map((p) => [p.id, p]) ?? []);
+  // Fetch profiles for all relevant users
+  const { data: profiles } = allUserIds.length > 0
+    ? await supabase
+        .from("profiles")
+        .select("id, full_name, reg_no, role")
+        .in("id", allUserIds)
+    : { data: [] };
 
-    regRows.forEach((r) => {
-      const prof = regProfileMap.get(r.user_id);
-      regSheet.addRow({
-        name: prof?.full_name || "N/A",
-        regNo: prof?.reg_no || "N/A",
-        role: prof?.role || "N/A",
-        registeredAt: r.registered_at ? new Date(r.registered_at).toLocaleString() : "N/A",
-      });
-    });
-  }
+  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+  const attMap = new Map((attRows ?? []).map((a) => [a.user_id, a]));
+  const regMap = new Map((regRows ?? []).map((r) => [r.user_id, r]));
 
-  regSheet.getRow(1).font = { bold: true };
-
-  // ── 2. Sheet: Attendance ─────────────────────────────────────────────────
-  const attSheet = workbook.addWorksheet("Attendance");
+  // ── 1. Sheet 1: Attendance (PRIMARY SHEET) ──────────────────────────────
+  const attSheet = workbook.addWorksheet("Attendance Checklist");
   attSheet.columns = [
     { header: "Full Name", key: "name", width: 30 },
     { header: "Registration No", key: "regNo", width: 20 },
+    { header: "Role", key: "role", width: 15 },
+    { header: "Attendance Status", key: "status", width: 20 },
     { header: "Check-in Method", key: "method", width: 20 },
-    { header: "Status", key: "status", width: 15 },
-    { header: "Checked At", key: "checkedAt", width: 25 },
+    { header: "Scan-in Time (IST)", key: "checkInTime", width: 25 },
+    { header: "Periods Present", key: "periods", width: 25 },
   ];
 
-  const { data: attendanceRows, error: attError } = await supabase
-    .from("attendance")
-    .select("user_id, method, status, updated_at, created_at")
-    .eq("event_id", eventId);
+  allUserIds.forEach((userId) => {
+    const prof = profileMap.get(userId);
+    const att  = attMap.get(userId);
+    const reg  = regMap.get(userId);
 
-  console.log("[Excel] Attendance fetched:", attendanceRows?.length ?? 0, "error:", attError?.message);
+    const periods = Array.isArray(att?.periods_present) && att.periods_present.length > 0
+      ? att.periods_present.join(", ")
+      : "None";
 
-  if (attendanceRows && attendanceRows.length > 0) {
-    const attUserIds = attendanceRows.map((a) => a.user_id);
-    const { data: attProfiles, error: attProfileErr } = await supabase
-      .from("profiles")
-      .select("id, full_name, reg_no")
-      .in("id", attUserIds);
+    const checkInTimeFormatted = att?.check_in_time
+      ? new Date(att.check_in_time).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
+      : "Not Checked In";
 
-    console.log("[Excel] Att profiles fetched:", attProfiles?.length ?? 0, "error:", attProfileErr?.message);
-    const attProfileMap = new Map(attProfiles?.map((p) => [p.id, p]) ?? []);
-
-    attendanceRows.forEach((a) => {
-      const prof = attProfileMap.get(a.user_id);
-      const timestamp = a.updated_at || a.created_at;
-      attSheet.addRow({
-        name: prof?.full_name || "N/A",
-        regNo: prof?.reg_no || "N/A",
-        method: a.method,
-        status: a.status,
-        checkedAt: timestamp ? new Date(timestamp).toLocaleString() : "N/A",
-      });
+    attSheet.addRow({
+      name: prof?.full_name || "N/A",
+      regNo: prof?.reg_no || "N/A",
+      role: prof?.role ? prof.role.replace("_", " ") : "Student",
+      status: att ? att.status.toUpperCase() : (reg ? "NOT CHECKED IN" : "ABSENT"),
+      method: att ? (att.method === "qr_self" ? "Self QR Scan" : att.method === "staff_scan" ? "Staff Scan" : att.method === "manual" ? "Manual Entry" : "Self Claim") : "N/A",
+      checkInTime: checkInTimeFormatted,
+      periods: periods,
     });
-  }
+  });
 
   attSheet.getRow(1).font = { bold: true };
+  attSheet.getRow(1).fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFE8B93E" }, // Gold header
+  };
 
-  // ── 3. Sheet: Yellow Forms ───────────────────────────────────────────────
+  // ── 2. Sheet 2: Yellow Forms ─────────────────────────────────────────────
   const yfSheet = workbook.addWorksheet("Yellow Forms");
   yfSheet.columns = [
     { header: "Full Name", key: "name", width: 30 },
     { header: "Registration No", key: "regNo", width: 20 },
-    { header: "Periods Missed", key: "periods", width: 25 },
+    { header: "Periods Missed / Present", key: "periods", width: 25 },
     { header: "Status", key: "status", width: 15 },
     { header: "Requested At", key: "createdAt", width: 25 },
   ];
 
-  const { data: yfRows, error: yfError } = await supabase
+  const { data: yfRows } = await supabase
     .from("yellow_forms")
     .select("user_id, periods, status, created_at")
     .eq("event_id", eventId);
 
-  console.log("[Excel] Yellow forms fetched:", yfRows?.length ?? 0, "error:", yfError?.message);
-
   if (yfRows && yfRows.length > 0) {
-    const yfUserIds = yfRows.map((yf) => yf.user_id);
-    const { data: yfProfiles } = await supabase
-      .from("profiles")
-      .select("id, full_name, reg_no")
-      .in("id", yfUserIds);
-
-    const yfProfileMap = new Map(yfProfiles?.map((p) => [p.id, p]) ?? []);
-
     yfRows.forEach((yf) => {
-      const prof = yfProfileMap.get(yf.user_id);
+      const prof = profileMap.get(yf.user_id);
       yfSheet.addRow({
         name: prof?.full_name || "N/A",
         regNo: prof?.reg_no || "N/A",
-        periods: yf.periods.join(", "),
+        periods: Array.isArray(yf.periods) ? yf.periods.join(", ") : "N/A",
         status: yf.status,
-        createdAt: yf.created_at ? new Date(yf.created_at).toLocaleString() : "N/A",
+        createdAt: yf.created_at ? new Date(yf.created_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "N/A",
       });
     });
   }
-
   yfSheet.getRow(1).font = { bold: true };
+
+  // ── 3. Sheet 3: Assigned Volunteers ──────────────────────────────────────
+  const volSheet = workbook.addWorksheet("Volunteers");
+  volSheet.columns = [
+    { header: "Full Name", key: "name", width: 30 },
+    { header: "Registration No", key: "regNo", width: 20 },
+    { header: "Duty / Role", key: "role", width: 20 },
+    { header: "Purpose", key: "purpose", width: 15 },
+    { header: "Status", key: "status", width: 15 },
+    { header: "Expected Duration", key: "duration", width: 20 },
+    { header: "Check-in Time", key: "checkInTime", width: 25 },
+  ];
+
+  const { data: volRows } = await supabase
+    .from("volunteer_assignments")
+    .select("user_id, role, purpose, status, expected_duration, check_in_time")
+    .eq("event_id", eventId);
+
+  if (volRows && volRows.length > 0) {
+    const volUserIds = volRows.map((v) => v.user_id);
+    const { data: volProfiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, reg_no")
+      .in("id", volUserIds);
+
+    const volProfileMap = new Map((volProfiles ?? []).map((p) => [p.id, p]));
+
+    volRows.forEach((v) => {
+      const prof = volProfileMap.get(v.user_id);
+      volSheet.addRow({
+        name: prof?.full_name || "N/A",
+        regNo: prof?.reg_no || "N/A",
+        role: v.role || "N/A",
+        purpose: v.purpose || "event",
+        status: v.status || "invited",
+        duration: v.expected_duration || "N/A",
+        checkInTime: v.check_in_time ? new Date(v.check_in_time).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "N/A",
+      });
+    });
+  }
+  volSheet.getRow(1).font = { bold: true };
 
   // Write workbook as Buffer
   const buffer = await workbook.xlsx.writeBuffer();
@@ -187,32 +201,29 @@ export async function buildYellowFormsExport(): Promise<Buffer> {
     .order("created_at", { ascending: false });
 
   if (allYfRows && allYfRows.length > 0) {
-    // Fetch all related profiles
     const allUserIds = Array.from(new Set(allYfRows.map((yf) => yf.user_id)));
     const { data: allProfiles } = await supabase
       .from("profiles")
       .select("id, full_name, reg_no")
       .in("id", allUserIds);
-    const allProfileMap = new Map(allProfiles?.map((p) => [p.id, p]) ?? []);
+    const allProfileMap = new Map((allProfiles ?? []).map((p) => [p.id, p]));
 
-    // Fetch all related events
-    const allEventIds = Array.from(new Set(allYfRows.map((yf) => yf.event_id)));
-    const { data: allEvents } = await supabase
-      .from("events")
-      .select("id, title")
-      .in("id", allEventIds);
-    const allEventMap = new Map(allEvents?.map((e) => [e.id, e]) ?? []);
+    const allEventIds = Array.from(new Set(allYfRows.map((yf) => yf.event_id).filter(Boolean)));
+    const { data: allEvents } = allEventIds.length > 0
+      ? await supabase.from("events").select("id, title").in("id", allEventIds)
+      : { data: [] };
+    const allEventMap = new Map((allEvents ?? []).map((e) => [e.id, e]));
 
     allYfRows.forEach((yf) => {
       const prof = allProfileMap.get(yf.user_id);
-      const ev = allEventMap.get(yf.event_id);
+      const ev = yf.event_id ? allEventMap.get(yf.event_id) : null;
       sheet.addRow({
         name: prof?.full_name || "N/A",
         regNo: prof?.reg_no || "N/A",
-        eventTitle: ev?.title || "N/A",
-        periods: yf.periods.join(", "),
+        eventTitle: ev?.title || "General / N/A",
+        periods: Array.isArray(yf.periods) ? yf.periods.join(", ") : "N/A",
         status: yf.status,
-        createdAt: yf.created_at ? new Date(yf.created_at).toLocaleString() : "N/A",
+        createdAt: yf.created_at ? new Date(yf.created_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "N/A",
       });
     });
   }
@@ -228,14 +239,6 @@ export async function buildYellowFormsExport(): Promise<Buffer> {
  */
 export async function buildMeetingAttendanceExport(meetingId: string): Promise<Buffer> {
   const supabase = getServiceRoleSupabase();
-
-  // Fetch meeting title for context
-  const { data: meeting } = await supabase
-    .from("meetings")
-    .select("title")
-    .eq("id", meetingId)
-    .single();
-  const meetingTitle = meeting?.title || "Meeting";
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "CAADS Platform";
@@ -265,7 +268,7 @@ export async function buildMeetingAttendanceExport(meetingId: string): Promise<B
       .from("profiles")
       .select("id, full_name, reg_no")
       .in("id", meetingUserIds);
-    const meetingProfileMap = new Map(meetingProfiles?.map((p) => [p.id, p]) ?? []);
+    const meetingProfileMap = new Map((meetingProfiles ?? []).map((p) => [p.id, p]));
 
     meetingRecords.forEach((r) => {
       const prof = meetingProfileMap.get(r.user_id);
@@ -274,7 +277,7 @@ export async function buildMeetingAttendanceExport(meetingId: string): Promise<B
         regNo: prof?.reg_no || "N/A",
         method: r.method,
         status: r.status,
-        createdAt: r.created_at ? new Date(r.created_at).toLocaleString() : "N/A",
+        createdAt: r.created_at ? new Date(r.created_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "N/A",
       });
     });
   }

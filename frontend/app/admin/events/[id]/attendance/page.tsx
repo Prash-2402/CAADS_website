@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Check, X, FileSpreadsheet, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, X, FileSpreadsheet, Clock } from "lucide-react";
 import { approveAttendanceClaim, rejectAttendanceClaim } from "@/app/admin/scan/actions";
-import { revalidatePath } from "next/cache";
+import { ManualAttendanceForm } from "./_components/manual-attendance-form";
+import { RemoveAttendanceButton } from "./_components/remove-attendance-button";
 
 export const metadata = {
   title: "Event Attendance - CAADS",
@@ -27,6 +28,12 @@ export default async function EventAttendancePage({
     notFound();
   }
 
+  // Fetch all profiles for manual entry dropdown
+  const { data: allProfiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, reg_no, role")
+    .order("full_name");
+
   // Fetch all registrations for this event
   const { data: registrations } = await supabase
     .from("event_registrations")
@@ -48,6 +55,8 @@ export default async function EventAttendancePage({
       user_id, 
       method, 
       status, 
+      check_in_time,
+      periods_present,
       updated_at,
       profiles!attendance_user_id_fkey (
         full_name,
@@ -79,7 +88,7 @@ export default async function EventAttendancePage({
     } else {
       userMap.set(log.user_id, {
         userId: log.user_id,
-        profile: log.profiles, // from the attendance join
+        profile: log.profiles,
         att: log,
         isRegistered: false,
       });
@@ -88,16 +97,17 @@ export default async function EventAttendancePage({
 
   const allAttendees = Array.from(userMap.values());
 
-  const handleApprove = async (formData: FormData) => {
+  // Proper server action wrappers that read userId from form data
+  const doApprove = async (formData: FormData) => {
     "use server";
     const userId = formData.get("userId") as string;
-    await approveAttendanceClaim(params.id, userId);
+    if (userId) await approveAttendanceClaim(params.id, userId);
   };
 
-  const handleReject = async (formData: FormData) => {
+  const doReject = async (formData: FormData) => {
     "use server";
     const userId = formData.get("userId") as string;
-    await rejectAttendanceClaim(params.id, userId);
+    if (userId) await rejectAttendanceClaim(params.id, userId);
   };
 
   return (
@@ -109,7 +119,7 @@ export default async function EventAttendancePage({
           </Link>
           <div>
             <h1 className="font-display text-3xl font-bold text-ivory">Event Attendance</h1>
-            <p className="font-body text-muted mt-1">Verify and approve check-ins for &quot;{event.title}&quot;.</p>
+            <p className="font-body text-muted mt-1">Verify, approve, and manage check-ins for &quot;{event.title}&quot;.</p>
           </div>
         </div>
 
@@ -125,6 +135,17 @@ export default async function EventAttendancePage({
         </div>
       </div>
 
+      {/* Manual Attendance Entry Component */}
+      <ManualAttendanceForm
+        eventId={event.id}
+        profiles={(allProfiles ?? []).map((p) => ({
+          id: p.id,
+          full_name: p.full_name,
+          reg_no: p.reg_no,
+          role: p.role,
+        }))}
+      />
+
       {/* Attendance approval list */}
       <div className="bg-bg-secondary border border-border-gold rounded-2xl p-6 md:p-8">
         <h2 className="font-display text-xl font-bold text-ivory mb-6">Attendee Status Checklist</h2>
@@ -136,6 +157,8 @@ export default async function EventAttendancePage({
                 <th className="pb-4 font-semibold">Reg No</th>
                 <th className="pb-4 font-semibold">Club Role</th>
                 <th className="pb-4 font-semibold">Method</th>
+                <th className="pb-4 font-semibold">Check-in Time</th>
+                <th className="pb-4 font-semibold">Periods</th>
                 <th className="pb-4 font-semibold">Status</th>
                 <th className="pb-4 font-semibold text-right">Actions</th>
               </tr>
@@ -144,6 +167,17 @@ export default async function EventAttendancePage({
               {allAttendees.map((attendee) => {
                 const { userId, profile, att } = attendee;
                 if (!profile) return null;
+
+                const checkInDate = att?.check_in_time ? new Date(att.check_in_time) : null;
+                const checkInFormatted = checkInDate
+                  ? checkInDate.toLocaleTimeString("en-IN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone: "Asia/Kolkata",
+                    })
+                  : null;
+
+                const periods: string[] = att?.periods_present || [];
 
                 return (
                   <tr key={userId} className="hover:bg-bg/40 transition-colors">
@@ -154,9 +188,33 @@ export default async function EventAttendancePage({
                       {att ? (
                         att.method === "qr_self" ? "Self QR Scan" :
                         att.method === "staff_scan" ? "Staff Scan" :
+                        att.method === "manual" ? "Manual Entry" :
                         "Self Claim"
                       ) : (
                         "Absent"
+                      )}
+                    </td>
+                    <td className="py-4 text-muted text-xs">
+                      {checkInFormatted ? (
+                        <span className="flex items-center gap-1 text-green-400 font-mono">
+                          <Clock size={12} />
+                          {checkInFormatted}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="py-4">
+                      {periods.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {periods.map((p) => (
+                            <span key={p} className="px-2 py-0.5 rounded text-[10px] font-bold bg-gold/20 text-gold border border-gold/30">
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted text-xs">—</span>
                       )}
                     </td>
                     <td className="py-4">
@@ -175,37 +233,46 @@ export default async function EventAttendancePage({
                       )}
                     </td>
                     <td className="py-4 text-right">
-                      {att?.status === "pending" && (
-                        <div className="flex justify-end items-center gap-2">
-                          <form action={handleApprove}>
-                            <input type="hidden" name="userId" value={userId} />
-                            <button
-                              type="submit"
-                              className="p-2 text-green-400 hover:bg-green-400/10 rounded-lg transition-colors border border-green-500/20"
-                              title="Approve check-in"
-                            >
-                              <Check size={16} />
-                            </button>
-                          </form>
-                          <form action={handleReject}>
-                            <input type="hidden" name="userId" value={userId} />
-                            <button
-                              type="submit"
-                              className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors border border-red-500/20"
-                              title="Reject claim"
-                            >
-                              <X size={16} />
-                            </button>
-                          </form>
-                        </div>
-                      )}
+                      <div className="flex justify-end items-center gap-2">
+                        {att?.status === "pending" && (
+                          <>
+                            <form action={doApprove}>
+                              <input type="hidden" name="userId" value={userId} />
+                              <button
+                                type="submit"
+                                className="p-2 text-green-400 hover:bg-green-400/10 rounded-lg transition-colors border border-green-500/20"
+                                title="Approve check-in"
+                              >
+                                <Check size={16} />
+                              </button>
+                            </form>
+                            <form action={doReject}>
+                              <input type="hidden" name="userId" value={userId} />
+                              <button
+                                type="submit"
+                                className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors border border-red-500/20"
+                                title="Reject claim"
+                              >
+                                <X size={16} />
+                              </button>
+                            </form>
+                          </>
+                        )}
+                        {att && (
+                          <RemoveAttendanceButton
+                            eventId={event.id}
+                            userId={userId}
+                            name={profile.full_name}
+                          />
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
               })}
               {allAttendees.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-muted">
+                  <td colSpan={8} className="py-8 text-center text-muted">
                     No registrations or check-ins found for this event.
                   </td>
                 </tr>

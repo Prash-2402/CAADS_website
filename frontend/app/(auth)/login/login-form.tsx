@@ -27,7 +27,12 @@ function SubmitButton() {
   );
 }
 
-export function LoginForm() {
+interface LoginFormProps {
+  /** Which portal this login page represents. Sent as a hidden field to loginAction. */
+  portal?: "student" | "volunteer" | "leader";
+}
+
+export function LoginForm({ portal = "student" }: LoginFormProps) {
   const [state, formAction] = useFormState(loginAction, initialState);
   const [email, setEmail] = useState("");
   const [usn, setUsn] = useState("");
@@ -36,6 +41,10 @@ export function LoginForm() {
   return (
     <div className="space-y-6">
       <form action={formAction} className="space-y-5">
+        {/* Hidden portal discriminator — tells the server action which portal
+            the user intends to access, so it can enforce role requirements. */}
+        <input type="hidden" name="portal" value={portal} />
+
         {/* Global error */}
         {state?.error && (
           <div

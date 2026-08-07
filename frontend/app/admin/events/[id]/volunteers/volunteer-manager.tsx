@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { inviteVolunteer, removeVolunteerAssignment, completeVolunteerAssignment } from "../../actions";
 import { Search, UserPlus, Trash2, Mail, CheckCircle2, Clock, XCircle, AlertCircle, Award } from "lucide-react";
+
 
 type VolunteerManagerProps = {
   eventId: string;
@@ -19,6 +21,7 @@ export default function VolunteerManager({
   assignments,
   activityStats,
 }: VolunteerManagerProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState("");
@@ -64,6 +67,7 @@ export default function VolunteerManager({
         const vol = profiles.find((p) => p.id === selectedUserId);
         generateDraftEmail(vol?.full_name || "Volunteer", role, duration);
         setSelectedUserId("");
+        router.refresh(); // re-fetch assignments from server
       } else {
         setError(res.error || "Failed to invite volunteer");
       }
@@ -82,6 +86,7 @@ export default function VolunteerManager({
       if (res.success) {
         setSuccess("Volunteer assignment removed/released!");
         setDraftEmail(null);
+        router.refresh(); // re-fetch assignments from server
       } else {
         setError(res.error || "Failed to remove volunteer");
       }
@@ -99,6 +104,7 @@ export default function VolunteerManager({
       const res = await completeVolunteerAssignment(eventId, userId);
       if (res.success) {
         setSuccess(`Duty marked as completed for ${name}!`);
+        router.refresh(); // re-fetch assignments so badge updates & button disappears
       } else {
         setError(res.error || "Failed to complete volunteer assignment");
       }

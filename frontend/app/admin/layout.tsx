@@ -1,5 +1,6 @@
 import { getProfile } from "@/lib/supabase/auth";
 import { LeaderGate } from "@/components/role-gate";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -26,7 +27,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const profile = await getProfile();
-  if (!profile) return null; // RoleGate inside LeaderGate will handle redirect
+  if (!profile) redirect("/login");
 
   const isAdmin = profile.role === "admin";
 
@@ -77,6 +78,13 @@ export default async function AdminLayout({
               >
                 <CalendarDays size={18} />
                 Manage Events
+              </Link>
+              <Link
+                href="/admin/volunteers"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-ivory hover:bg-gold/10 hover:text-gold transition-colors font-body text-sm"
+              >
+                <Users size={18} />
+                All Volunteers
               </Link>
               <Link
                 href="/admin/scan"

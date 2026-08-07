@@ -32,7 +32,8 @@ export default async function EventVolunteersPage({
     .select("id, full_name, role")
     .in("role", ["volunteer", "core_team", "admin"]);
 
-  // Fetch assignments for this event
+  // Fetch assignments for this event — use explicit FK hint so Supabase resolves
+  // volunteer_assignments.user_id → profiles.id correctly
   const { data: assignments } = await supabase
     .from("volunteer_assignments")
     .select(`
@@ -40,7 +41,7 @@ export default async function EventVolunteersPage({
       role,
       expected_duration,
       status,
-      profiles (
+      profiles!volunteer_assignments_user_id_fkey (
         full_name,
         role
       )
