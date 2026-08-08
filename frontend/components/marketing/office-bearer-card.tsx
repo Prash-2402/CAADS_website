@@ -198,16 +198,17 @@ export function OfficeBearerCard({ leader, index }: Props) {
               }`}
             >
               <span
-                className="absolute flex items-center justify-center"
+                className="absolute flex items-center justify-center px-4"
                 style={{
                   fontFamily: `${sigFontVar}, cursive`,
-                  fontSize: "2.4rem",
-                  lineHeight: 1,
+                  fontSize: "2.1rem",
+                  lineHeight: 1.1,
                   color: leader.signatureColor,
-                  clipPath: revealed ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
+                  clipPath: revealed ? "inset(-10px -20px -10px -20px)" : "inset(0 100% 0 0)",
                   transition: reduced ? "none" : `clip-path ${revealTiming}`,
                   whiteSpace: "nowrap",
                   textShadow: "0 2px 8px rgba(0,0,0,0.9)", // Strong shadow for portrait readability
+                  paddingRight: "1.2rem", // Prevent trailing cursive swash truncation
                 }}
                 aria-hidden="true"
               >

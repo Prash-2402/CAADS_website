@@ -4,7 +4,6 @@ import {
   useRef,
   useState,
   useCallback,
-  useEffect,
   type MouseEvent,
 } from "react";
 import Image from "next/image";
@@ -59,10 +58,10 @@ export function FacilitatorCard({ leader }: Props) {
       transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
       className={`flex flex-col items-center select-none ${isExpanded ? "relative z-50" : "relative z-10"}`}
     >
-      {/* Facilitator Gold Crown Crown Header */}
+      {/* Facilitator Crown Header */}
       <div className="flex items-center gap-2 mb-3">
         <Crown size={18} className="text-gold animate-pulse" />
-        <span className="font-mono text-xs tracking-[0.2em] font-bold text-gold uppercase">
+        <span className="font-mono text-xs tracking-[0.25em] font-bold text-gold uppercase">
           Faculty Facilitator
         </span>
         <Crown size={18} className="text-gold animate-pulse" />
@@ -107,7 +106,7 @@ export function FacilitatorCard({ leader }: Props) {
           <div
             className={`absolute border-2 border-gold-bright bg-bg flex items-center justify-center overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${
               isExpanded
-                ? "w-[280px] h-[360px] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(201,162,39,0.3)] -top-[126px] -left-[16px]"
+                ? "w-[300px] h-[370px] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(201,162,39,0.3)] -top-[131px] -left-[16px]"
                 : "w-[108px] h-[108px] rounded-full top-0 left-0"
             }`}
           >
@@ -120,13 +119,13 @@ export function FacilitatorCard({ leader }: Props) {
                   className={`object-cover transition-transform duration-700 ease-out ${
                     isExpanded ? "scale-105" : "scale-110"
                   }`}
-                  sizes={isExpanded ? "280px" : "108px"}
+                  sizes={isExpanded ? "300px" : "108px"}
                   priority
                 />
                 
                 {/* Dark Gradient Overlay when signature is revealed */}
                 <div
-                  className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent transition-opacity duration-300"
+                  className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent transition-opacity duration-300"
                   style={{ opacity: revealed ? 1 : 0 }}
                 />
               </div>
@@ -141,26 +140,27 @@ export function FacilitatorCard({ leader }: Props) {
           <div
             className={`absolute pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] z-20 ${
               isExpanded
-                ? "w-[280px] h-[360px] -top-[126px] -left-[16px]"
+                ? "w-[300px] h-[370px] -top-[131px] -left-[16px]"
                 : "w-[108px] h-[108px] top-0 left-0"
             }`}
           >
             <div 
-              className={`absolute inset-x-0 bottom-9 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${
+              className={`absolute inset-x-0 bottom-8 flex items-center justify-center pointer-events-none transition-opacity duration-300 px-4 ${
                 isExpanded ? "opacity-100" : "opacity-0"
               }`}
             >
               <span
-                className="absolute flex items-center justify-center"
+                className="absolute flex items-center justify-center px-6"
                 style={{
                   fontFamily: `${sigFontVar}, cursive`,
-                  fontSize: "2.6rem",
-                  lineHeight: 1,
+                  fontSize: "2.1rem",
+                  lineHeight: 1.1,
                   color: leader.signatureColor,
-                  clipPath: revealed ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
+                  clipPath: revealed ? "inset(-10px -20px -10px -20px)" : "inset(0 100% 0 0)",
                   transition: `clip-path ${revealTiming}`,
                   whiteSpace: "nowrap",
                   textShadow: "0 2px 10px rgba(0,0,0,0.95), 0 0 15px rgba(232,185,62,0.4)",
+                  paddingRight: "1.5rem", // Prevent right swash truncation
                 }}
                 aria-hidden="true"
               >
@@ -174,10 +174,10 @@ export function FacilitatorCard({ leader }: Props) {
         <div
           className="relative -ml-5 flex flex-col justify-center border-2 border-gold-bright"
           style={{
-            width: 290,
-            minHeight: 90,
-            paddingLeft: 26,
-            paddingRight: 16,
+            width: 300,
+            minHeight: 96,
+            paddingLeft: 28,
+            paddingRight: 18,
             paddingTop: 12,
             paddingBottom: 12,
             backgroundColor: "#12100C",
@@ -187,12 +187,12 @@ export function FacilitatorCard({ leader }: Props) {
           }}
         >
           {/* Top Label & Badge Icon */}
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-gold-bright font-bold flex items-center gap-1">
-              <ShieldCheck size={12} className="text-gold-bright" />
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="font-mono text-[10.5px] uppercase tracking-[0.2em] text-gold-bright font-bold flex items-center gap-1.5">
+              <ShieldCheck size={13} className="text-gold-bright flex-shrink-0" />
               {leader.role}
             </span>
-            <Sparkles size={12} className="text-gold-bright opacity-80" />
+            <Sparkles size={13} className="text-gold-bright opacity-90 flex-shrink-0" />
           </div>
 
           {/* Decorative Divider */}
@@ -202,13 +202,14 @@ export function FacilitatorCard({ leader }: Props) {
             <div className="h-px flex-1 bg-gradient-to-r from-gold via-gold-bright to-gold" />
           </div>
 
-          {/* Name */}
-          <div className="relative flex items-center" style={{ height: 28 }}>
+          {/* Name - Prominently Displayed */}
+          <div className="relative flex items-center py-0.5">
             <span
-              className="font-display font-bold uppercase tracking-wider text-ivory text-base"
+              className="font-display font-bold uppercase tracking-wider text-ivory text-sm sm:text-base whitespace-nowrap block"
               style={{
-                letterSpacing: "0.05em",
-                textShadow: "0 1px 4px rgba(0,0,0,0.8)",
+                letterSpacing: "0.06em",
+                color: "#F2EDE4",
+                textShadow: "0 1px 6px rgba(0,0,0,0.9)",
               }}
             >
               {leader.name}
@@ -223,7 +224,7 @@ export function FacilitatorCard({ leader }: Props) {
           </div>
 
           {/* Department Footer */}
-          <p className="font-mono text-[9px] tracking-[0.2em] uppercase text-center text-muted/80">
+          <p className="font-mono text-[9.5px] tracking-[0.2em] uppercase text-center text-muted/90 font-medium">
             Department of ADSE • Faculty Advisor
           </p>
         </div>
