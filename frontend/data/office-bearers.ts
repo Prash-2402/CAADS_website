@@ -42,7 +42,7 @@ export type Leader = {
 
 // ── Facilitator (Tier 0 — Top Honor) ───────────────────────────────────────
 export const FACILITATOR: Leader = {
-  name: "Prof. Santrupth B N",
+  name: "Prof. Santrupth B C",
   role: "Faculty Facilitator",
   tier: 0,
   photoUrl: "/images/leaders/santrupth sir.jpeg",
