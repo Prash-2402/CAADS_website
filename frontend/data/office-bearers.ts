@@ -40,9 +40,21 @@ export type Leader = {
   tagline?: string;
 };
 
+// ── Facilitator (Tier 0 — Top Honor) ───────────────────────────────────────
+export const FACILITATOR: Leader = {
+  name: "Prof. Santrupth B N",
+  role: "Faculty Facilitator",
+  tier: 0,
+  photoUrl: "/images/leaders/santrupth sir.jpeg",
+  signatureFont: "herr-von-muellerhoff",
+  signatureColor: SIGNATURE_COLORS["bright-gold"],
+  tagline: "Department of ADSE",
+};
+
 // ── Roster — hierarchy order per user spec ─────────────────────────────────
 // President → VP → Secretary → Coordinators → Club Heads → Events Head → Media Heads
 // Array order IS the render order within each tier. Do not sort programmatically.
+
 
 export const OFFICE_BEARERS: Leader[] = [
   // ── Tier 1: President ─────────────────────────────────────────────
